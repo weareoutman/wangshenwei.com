@@ -14,7 +14,7 @@ module.exports = {
   ],
   // Customize your site metadata:
   siteMetadata: {
-    title: `ThisIsShenweiWang`,
+    title: `WeAreOutMan`,
     author: `Shenwei Wang`,
     description: `Personal Blog by Shenwei Wang`,
     social: [

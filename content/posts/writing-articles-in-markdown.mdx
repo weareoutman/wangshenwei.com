@@ -4,7 +4,7 @@ date: 2014-02-18
 ---
 
 > Content is king.
-> <footer>Bill Gates</footer>
+> <footer>— Bill Gates</footer>
 
 比尔盖茨1996年关于互联网的论点**“内容为王”**，我们花了十几年才充分体会到这几个字的智慧。
 
@@ -17,9 +17,9 @@ date: 2014-02-18
 是时候回归到**内容**本身了，我们需要丢掉鼠标，全身心投入到写作中，Markdown 正是一个不错的选择。
 
 > Markdown 是一个提供给 web 写作者的文本转 html 的工具。Markdown 允许你使用一种易读易写的纯文本格式来写作，然后把它转换成结构化的 html 代码。
-> <footer>Daring Fireball: <cite>[Markdown](http://daringfireball.net/projects/markdown/)</cite></footer>
+> <footer>— Daring Fireball: <cite><a href="https://daringfireball.net/projects/markdown/">Markdown</a></cite></footer>
 
-Markdown 的基本格式很简单，可以看看官方的[文档说明](http://daringfireball.net/projects/markdown/basics)。
+Markdown 的基本格式很简单，可以看看官方的[文档说明](https://daringfireball.net/projects/markdown/basics)。
 
 它的基本的文本标记格式：
 
@@ -59,9 +59,9 @@ Markdown 的基本格式很简单，可以看看官方的[文档说明](http://d
 
 对于程序猿，在文章中引入代码片段是必不可少的，这在 Markdown 中也很简单：
 
-    ```javascript
-    alert('hello world');
-    ```
+```javascript
+alert('hello world');
+```
 
 其实这里的文章都是使用 Markdown 撰写的，在提交到服务端时，[marked](https://github.com/chjj/marked) 将其转换为html内容并保存。对于其中的代码部分，通过 marked 的设置选项，借助 [Highlight.js](https://github.com/isagalaev/highlight.js) 进行语法高亮的转换。你可以试试[查看这篇文章的markdown原内容](/article/write-articles-in-markdown/raw)。
 

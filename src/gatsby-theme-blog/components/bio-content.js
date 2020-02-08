@@ -7,8 +7,8 @@ import { Styled } from "theme-ui"
 
 export default () => (
   <Fragment>
-    Personal Blog by <Styled.a href="https://wangshenwei.com/">Shenwei Wang</Styled.a>
+    Personal Blog by <Styled.a href="https://wangshenwei.com/">Shenwei Wang</Styled.a>.
     <br />
-    Ride bikes. Have fun. Feel good.
+    Coding. Hiking. Biking. Enjoying.
   </Fragment>
 )

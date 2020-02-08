@@ -1,3 +1,5 @@
+[![Travis Status](https://travis-ci.com/weareoutman/weareoutman.github.io.svg?branch=master)](https://travis-ci.com/weareoutman/weareoutman.github.io)
+
 <p align="center">
   <a href="https://www.gatsbyjs.org">
     <img alt="Gatsby" src="https://www.gatsbyjs.org/monogram.svg" width="60" />
