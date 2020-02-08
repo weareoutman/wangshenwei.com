@@ -1,0 +1,68 @@
+---
+title: 用 Markdown 写作
+date: 2014-02-18
+---
+
+> Content is king.
+> <footer>Bill Gates</footer>
+
+比尔盖茨1996年关于互联网的论点**“内容为王”**，我们花了十几年才充分体会到这几个字的智慧。
+
+过去十年，基于 *WYSIWYG* (what you see is what you get) 的“所见即所得编辑器”是各大博客站点写文章的主要工具。很强大，没话说，把Word搬到了网页上，酷！
+
+但后来我们发现 *WYSIWYG* 总是让我们不自觉地将一部分精力花在了字体、样式、排版等等问题上，而占用了创造真正有价值的“内容”的时间。
+
+> 不要在意细节！
+
+是时候回归到**内容**本身了，我们需要丢掉鼠标，全身心投入到写作中，Markdown 正是一个不错的选择。
+
+> Markdown 是一个提供给 web 写作者的文本转 html 的工具。Markdown 允许你使用一种易读易写的纯文本格式来写作，然后把它转换成结构化的 html 代码。
+> <footer>Daring Fireball: <cite>[Markdown](http://daringfireball.net/projects/markdown/)</cite></footer>
+
+Markdown 的基本格式很简单，可以看看官方的[文档说明](http://daringfireball.net/projects/markdown/basics)。
+
+它的基本的文本标记格式：
+
+```markdown
+# 这是一个主标题
+
+## 这是一个二级标题
+
+这是一个段落
+
+> 这是一段引用
+
+* 这是
+* 一个
+* 列表
+```
+
+这将被转换为这样的html代码：
+
+```html
+<h1>这是一个主标题</h1>
+
+<h2>这是一个二级标题</h2>
+
+<p>这是一个段落</p>
+
+<blockquote>
+  <p>这是一段引用</p>
+</blockquote>
+
+<ul>
+  <li>这是</li>
+  <li>一个</li>
+  <li>列表</li>
+</ul>
+```
+
+对于程序猿，在文章中引入代码片段是必不可少的，这在 Markdown 中也很简单：
+
+    ```javascript
+    alert('hello world');
+    ```
+
+其实这里的文章都是使用 Markdown 撰写的，在提交到服务端时，[marked](https://github.com/chjj/marked) 将其转换为html内容并保存。对于其中的代码部分，通过 marked 的设置选项，借助 [Highlight.js](https://github.com/isagalaev/highlight.js) 进行语法高亮的转换。你可以试试[查看这篇文章的markdown原内容](/article/write-articles-in-markdown/raw)。
+
+各个主流的web编程语言都有几款比较好用的 Markdown 转换工具。例如上面提到的 Node.js 平台的 marked。如果可行的话，你可以试试动手改造下你的个人博客站点，换一种方式写文章，回归内容。

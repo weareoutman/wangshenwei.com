@@ -4,20 +4,23 @@ module.exports = {
       resolve: `gatsby-theme-blog`,
       options: {},
     },
+    {
+      resolve: `gatsby-plugin-manifest`,
+      options: {
+        icon: "src/images/favicon.png",
+        legacy: false
+      }
+    },
   ],
   // Customize your site metadata:
   siteMetadata: {
-    title: `My Blog Title`,
-    author: `My Name`,
-    description: `My site description...`,
+    title: `ThisIsShenweiWang`,
+    author: `Shenwei Wang`,
+    description: `Personal Blog by Shenwei Wang`,
     social: [
       {
-        name: `twitter`,
-        url: `https://twitter.com/gatsbyjs`,
-      },
-      {
         name: `github`,
-        url: `https://github.com/gatsbyjs`,
+        url: `https://github.com/weareoutman`,
       },
     ],
   },

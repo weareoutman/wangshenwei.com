@@ -1,0 +1,180 @@
+---
+title: JavaScript 特性
+date: 2014-03-21
+---
+
+动态和函数式编程，是 JavaScript 的几个基本特性之一。动态让语言更加灵活和自由，函数式编程则是 JavaScript 的主要编程风格。
+
+JavaScript 的另外几个重要特性，如作用域链与闭包、基于原型的面向对象等，将在其它文章中讨论。
+
+### 动态
+
+静态语言vs动态语言，就好比书面语vs口语，一个高端大气上档次，一个灵活自由接地气，各有用武之地，这里就不在编程语言之间掐架了。理解并熟练运用动态特性，可以让你在开发时更加高效。同时留意由此带来的潜在问题，可以避免你误入语言陷进。
+
+JavaScript 的动态特性主要表现在这几个方面：动态类型、eval、对象动态更新、反射。
+
+#### 动态类型
+
+一个 `变量` 并没有绑定的 `类型` ，`类型` 只与具体的 `值` 关联。
+
+这给C、Java等传统的强类型语言开发者以困惑，但对于PHP等开发者则又倍感亲切：
+
+```javascript
+var foo = 1;
+foo = "A string";
+foo = [1, 2];
+foo = new Date();
+foo = function(){};
+```
+
+#### Eval
+
+虽然 `eval` 不被推荐使用，但是它也一度被很多开发者视为瑰宝。
+
+在运行时， eval 可以将给定的字符串当作代码语句执行：
+
+```php
+<script>
+var func = <?php echo json_encode($user_send['func']); ?>;
+eval(func + "()");
+function sayHello() {}
+function sayGoodbye() {}
+</script>
+```
+
+在代码中用一组字符串与变量拼出另一串代码来运行，这看起来吊爆了。
+
+但请在使用 eval 之前考虑下它将带来的潜在问题：
+
+1. 使用了 eval 的代码可阅读性很差，你读到这样的代码时很难判断它究竟要做啥，即使那是你自己几天前写的。
+2. JavaScript 解释器引擎难以对代码执行优化。解释器引擎的执行优化是建立在“**明确的知道这个变量在运行时所指向的引用**”的基础上。
+3. eval 中的字符串如果包含用户输入的数据，这会给攻击者有机可乘。
+4. 如果你是有经验的开发者，大多数情况下你可以使用更高效的函数嵌套（闭包）等来解决问题；如果你没有足够的经验，那更不要使用 eval ，如果你不想你或你的用户遭受攻击。
+
+#### 对象动态更新
+
+对象的属性和方法都可以在运行时，增加、修改、删除：
+
+```javascript
+var obj = {
+    prop: "value"
+};
+// 增加方法
+obj.other = function(){};
+// 修改属性
+obj.prop = "new value";
+// 删除属性
+delete obj.prop;
+```
+
+#### 反射
+
+反射也是动态语言的重要特性之一：
+
+```javascript
+var obj = {
+    foo: "value",
+    bar: function() {
+        return this.foo;
+    }
+};
+// 使用字符串访问对象的属性或方法
+console.log(obj.foo === obj["foo"]);
+// 遍历对象的属性和方法
+for (var key in obj) {
+    // 使用 `hasOwnProperty` 可以避免遍历到由原型链继承而来的属性或方法
+    if (obj.hasOwnProperty(key)) {
+        console.log(key, obj[key]);
+    }
+}
+```
+
+### 函数
+
+> Function is first-class in javascript.
+
+函数是 JavaScript 中的一等公民。怎么理解？简单说就是函数拥有至高的权利。
+
+看看 JavaScript 中的函数可以做哪些事：
+
+* 作为参数传递
+* 作为另一个函数的返回值
+* 赋值给一个变量
+* 作为对象的一个方法
+
+```javascript
+var bind = function(func, target) {
+    return function() {
+        func.apply(target, arguments);
+    };
+};
+var utils = {
+    trim: function(str) {
+        return str.replace(/^\s+|\s+$/g, "");
+    }
+};
+```
+
+#### 可变参数
+
+* 函数的参数数量没有限制
+* 可以通过参数名或者 `arguments` 对象来访问参数
+
+```javascript
+(function(){
+    // `arguments` 拥有数组的外观，可以通过数字下标访问各个参数
+    var arg1 = arguments[0], // 1
+        arg2 = arguments[1]; // 2
+    // 但它并不是数组
+    console.log(arguments instanceof Array); // false
+    console.log(arguments.slice); // undefined
+    // 对 `arguments` 进行数组相关操作
+    var argMore = Array.prototype.slice.call(arguments, 2);
+    console.log(argMore); // [3, 4]
+})(1, 2, 3, 4);
+```
+
+#### 作用域
+
+先看看C语言中的**块作用域**(block scope)：
+
+```javascript
+int function foo(void) {
+    int bar = 1;
+    {
+        int bar = 2;
+    }
+    return bar; // 1
+}
+```
+
+而 JavaScript 中则有两种作用域：**函数作用域**和**全局作用域**。
+
+一个简单的函数作用域的例子：
+
+```javascript
+function foo() {
+    var bar = 1;
+    {
+        var bar = 2;
+    }
+    return bar; // 2
+}
+```
+
+全局作用域，对于浏览器来说可以理解为 `window` 对象（Node.js则是 `global`）：
+
+```javascript
+var bar = 1;
+function foo() {}
+alert(window.bar); // 1
+alert(window.foo); // "function foo() {}"
+```
+
+对于变量 `bar` 和函数 `foo` 都属于全局作用域，都是 `window` 对象的一个属性。
+
+作用域的嵌套将形成**作用域链**，函数的嵌套将形成**闭包**。
+
+作用域链与闭包是 JavaScript 的两个重要概念，理解并掌握这两点，是 JavaScript 开发者进阶之路的敲门砖。
+
+下一篇文章： [JavaScript 作用域和闭包](/article/javascript-scopes-and-closures)

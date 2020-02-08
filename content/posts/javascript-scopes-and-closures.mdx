@@ -1,0 +1,152 @@
+---
+title: JavaScript 作用域和闭包
+date: 2014-03-24
+---
+
+作用域的嵌套将形成**作用域链**，函数的嵌套将形成**闭包**。闭包与作用域链是 JavaScript 区别于其它语言的重要特性之一。
+
+### 作用域
+
+JavaScript 中有两种作用域：函数作用域和全局作用域。
+
+在一个函数中声明的变量以及该函数的参数享有同一个作用域，即函数作用域。一个简单的函数作用域的例子：
+
+```javascript
+function foo() {
+    var bar = 1;
+    {
+        var bar = 2;
+    }
+    return bar; // 2
+}
+```
+
+不同于C等其它有**块作用域**的语言，这里将始终返回 `2` 。
+
+全局作用域，对于浏览器来说可以理解为 `window` 对象（Node.js则是 `global`）：
+
+```javascript
+var bar = 1;
+function foo() {}
+alert(window.bar); // 1
+alert(window.foo); // "function foo() {}"
+```
+
+对于变量 `bar` 和函数 `foo` 都属于全局作用域，都是 `window` 的一个属性。
+
+### 作用域链
+
+在 JavaScript 中访问一个变量时，将从本地变量和参数开始，逐级向上遍历作用域直到全局作用域。
+
+```javascript
+var scope = 0, zero = "global-scope";
+(function(){
+    var scope = 1, one = "scope-1";
+    (function(){
+        var scope = 2, two = "scope-2";
+        (function(){
+            var scope = 3, three = "scope-3";
+            // scope-3 scope-2 scope-1 global-scope
+            console.log([three, two, one, zero].join(" "));
+            console.log(scope); // 3
+        })();
+        console.log(typeof three); // undefined
+        console.log(scope); // 2
+    })();
+    console.log(typeof two); // undefined
+    console.log(scope); // 1
+})();
+console.log(typeof one); // undefined
+console.log(scope); // 0
+```
+
+在最里层的函数中，各个变量都能被逐级遍历并输出。而倒数第二层的函数中，变量 `three` 无法遍历找到，所以输出了 `undefined` 。
+
+举一个通俗点的例子，你准备要花钱买点东西时，会先摸摸自己的钱包，没了你可以找你爸要，你爸也没有就再找你爷爷，... 。而你爸没钱买东西时，他并不会来找你要。
+
+### 闭包
+
+在一个函数中，定义另一个函数，称为函数嵌套。函数的嵌套将形成一个**闭包**。
+
+闭包与作用域链相辅相成，函数的嵌套在产生了链式关系的多个作用域的同时，也形成了一个闭包。
+
+```javascript
+function bind(func, target) {
+    return function() {
+        func.apply(target, arguments);
+    };
+}
+```
+
+那么怎么理解闭包呢？
+
+* 外部函数不能访问内嵌函数
+* 外部函数也不能访问内嵌函数的参数和变量
+* 而内嵌函数可以访问外部函数的参数和变量
+* 换一个说法：内嵌函数包含了外部函数的作用域
+
+我们再看看之前讲述的作用域链的例子，这次从闭包的角度来理解下：
+
+```javascript
+var scope = 0, zero = "global-scope";
+(function(){
+    var scope = 1, one = "scope-1";
+    (function(){
+        var scope = 2, two = "scope-2";
+        (function(){
+            var scope = 3, three = "scope-3";
+            // scope-3 scope-2 scope-1 global-scope
+            console.log([three, two, one, zero].join(" "));
+            console.log(scope); // 3
+        })();
+        console.log(typeof three); // undefined
+        console.log(scope); // 2
+    })();
+    console.log(typeof two); // undefined
+    console.log(scope); // 1
+})();
+console.log(typeof one); // undefined
+console.log(scope); // 0
+```
+
+最里层的函数能访问到其内部和外部定义的所有变量。而倒数第二层的函数无法访问到最里层的变量，同时，最里层的 `scope = 3` 这个赋值操作并没有对其外部的同名变量产生影响。
+
+再换个角度来理解闭包：
+
+* 每次外部函数的调用，内嵌函数都会被创建一次
+* 在它被创建时，外部函数的作用域（包括任何本地变量、参数等上下文），
+会成为每个内嵌函数对象的内部状态的一部分，即使在外部函数执行完并退出后
+
+看下面的例子：
+
+```javascript
+var i, list = [];
+for (i = 0; i < 2; i += 1) {
+    list.push(function(){
+        console.log(i);
+    });
+}
+list.forEach(function(func){
+  func();
+});
+```
+
+我们将得到两次 "2" ，而不是预期的 "1" 和 "2" ，这是因为在 `list` 中的两个函数访问的变量 `i` 都是其上一层作用域的同一个变量。
+
+我们改动下代码，以利用闭包来解决这个问题：
+
+```javascript
+var i, list = [];
+for (i = 0; i < 2; i += 1) {
+    list.push((function(j){
+        return function(){
+            console.log(j);
+        };
+    })(i));
+}
+list.forEach(function(func){
+  func();
+});
+```
+
+外层的“立即执行函数”接收了一个参数变量 `i` ，在其函数内以参数 `j` 的形式存在，它与被返回的内层函数中的名称 `j` 指向同一个引用。外层函数执行并退出后，参数 `j` （此时它的值为 `i` 的当前值）成为了其内层函数的状态的一部分被保存了下来。

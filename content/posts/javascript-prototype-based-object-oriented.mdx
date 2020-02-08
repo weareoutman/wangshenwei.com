@@ -1,0 +1,128 @@
+---
+title: JavaScript 基于原型的面向对象
+date: 2014-03-25
+---
+
+> JavaScript 支持面向对象的编程风格。
+
+对很多开发者来说，“JavaScript 面向对象”这句话听起来就是在扯淡，它连 `class` 都没有，你是在逗我吗？
+
+事实上 JavaScript 确实支持面向对象，它通过原型来实现类的定义和继承，通过原型可以模拟很多基于类的面向对象的特性。
+
+### 类
+
+JavaScript 中没有 `class` ，`function` 即 `class` 。
+
+```javascript
+function Person() { }
+```
+
+### 对象 - 类的实例
+
+使用 `new Func` 将创建一个 `Func` 的实例。这个和大部分面向对象的语言一致。
+
+```javascript
+function Person() { }
+var lilei = new Person();
+var hanmeimei = new Person();
+```
+
+### 构造器
+
+`function` 即 `constructor` 。
+
+```javascript
+function Person() {
+    console.log("A person is born");
+}
+var lilei = new Person();
+console.log(lilei.constructor === Person); // true
+```
+
+### 属性和方法
+
+通过构造器(函数)的 `prototype` 来设置类的成员属性和成员方法。通过关键字 `this` 可以设置类的对象的属性和方法。
+
+```javascript
+function Person(gender) {
+    this.gender = gender || "unkown";
+}
+Person.prototype.sayHello = function() {
+    console.log("Hello world!");
+};
+var lilei = new Person("male");
+console.log(lilei.gender);
+lilei.sayHello();
+```
+
+### 继承
+
+通过将子类的 `prototype` 赋值为父类的一个实例，可以实现继承。
+
+```javascript
+function Student() {
+    Person.call(this);
+}
+Student.prototype = new Person();
+// Student.prototype = Object.create(Person.prototype);
+Student.prototype.constructor = Student;
+Student.prototype.sayHello = function() {
+    console.log("Hello school!");
+};
+Student.prototype.sayGoodbye = function() {
+    console.log("Goodbye school!");
+};
+var lilei = new Student();
+lilei.sayHello();
+lilei.sayGoodbye();
+console.log(lilei instanceof Person);  // true
+console.log(lilei instanceof Student); // true
+```
+
+那么基于原型的继承是如何实现的？
+
+### 原型链
+
+在 JavaScript 中访问一个对象的属性时，会先从自身属性开始，向上追溯原型链，直到找到这个属性，或者遇到 `null` 为止。这种链式关系和作用域链很相似。
+
+```javascript
+// lilei --> student --> person --> Object.prototype --> null
+
+var person = {
+    gender: "unkown",
+    sayHello: function() {
+        console.log("Hello world!");
+    },
+    walk: function() {
+        console.log("I am walking");
+    }
+};
+
+var student = Object.create(person);
+student.sayHello = function() {
+    console.log("Hello school!");
+};
+student.study = function() {
+    console.log("I am studying!");
+};
+
+var lilei = Object.create(student);
+lilei.gender = "male";
+
+console.log(lilei.gender);
+lilei.walk();
+lilei.sayHello();
+lilei.study();
+
+console.log(person.gender);
+delete lilei.gender;
+console.log(lilei.gender);
+console.log(person.gender);
+
+// lilei --> student --> person --> Object.prototype --> null
+
+console.log(student.isPrototypeOf(lilei)); // true
+console.log(person.isPrototypeOf(student)); // true
+console.log(Object.prototype.isPrototypeOf(person)); // true
+console.log(null === Object.prototype.__proto__); // true
+```
