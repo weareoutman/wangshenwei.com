@@ -1,4 +1,4 @@
-[![Travis Status](https://travis-ci.com/weareoutman/weareoutman.github.io.svg?branch=master)](https://travis-ci.com/weareoutman/weareoutman.github.io)
+[![Travis Status](https://travis-ci.com/weareoutman/weareoutman.github.io.svg?branch=develop)](https://travis-ci.com/weareoutman/weareoutman.github.io)
 
 <p align="center">
   <a href="https://www.gatsbyjs.org">
