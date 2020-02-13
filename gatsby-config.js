@@ -22,7 +22,7 @@ module.exports = {
         // Set Variation ID. 0 for original 1,2,3....
         // variationId: "YOUR_GOOGLE_OPTIMIZE_VARIATION_ID",
         // Any additional optional fields
-        sampleRate: 5,
+        // sampleRate: 5,
         siteSpeedSampleRate: 33,
         // cookieDomain: "wangshenwei.com",
       },
