@@ -1,0 +1,16 @@
+p.figure-caption {
+  text-align: center;
+  opacity: 0.6;
+  font-size: 87.5%;
+  margin-top: -14px;
+  font-style: italic;
+  
+  width: fit-content;
+  max-width: 90%;
+  margin-left: auto;
+  margin-right: auto;
+  border-bottom: 1px solid #ccc;
+  padding-left: 28px;
+  padding-right: 28px;
+  padding-bottom: 7px;
+}
