@@ -14,3 +14,15 @@ p.figure-caption {
   padding-right: 28px;
   padding-bottom: 7px;
 }
+
+hr.divider {
+  border: none;
+  font-size: 150%;
+  letter-spacing: 0.6em;
+  margin-bottom: 42px;
+  text-align: center;
+}
+
+hr.divider::before {
+  content: "...";
+}
