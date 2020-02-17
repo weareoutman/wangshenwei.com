@@ -1,10 +1,7 @@
 import React from "react"
 import { Link } from "gatsby"
-import { css, useColorMode, Styled } from "theme-ui"
-import Switch from "gatsby-theme-blog/src/components/switch"
+import { css, Styled } from "theme-ui"
 import Bio from "gatsby-theme-blog/src/components/bio"
-import sun from "gatsby-theme-blog/assets/sun.png"
-import moon from "gatsby-theme-blog/assets/moon.png"
 
 const rootPath = `${__PATH_PREFIX__}/`
 
@@ -54,37 +51,7 @@ const Title = ({ children, location }) => {
   }
 }
 
-const iconCss = [{ pointerEvents: `none`, margin: 4 }]
-
-const checkedIcon = (
-  <img
-    alt="moon indicating dark mode"
-    src={moon}
-    width="16"
-    height="16"
-    role="presentation"
-    css={iconCss}
-  />
-)
-
-const uncheckedIcon = (
-  <img
-    alt="sun indicating light mode"
-    src={sun}
-    width="16"
-    height="16"
-    role="presentation"
-    css={iconCss}
-  />
-)
-
 export default ({ children, title, ...props }) => {
-  const [colorMode, setColorMode] = useColorMode()
-  const isDark = colorMode === `dark`
-  const toggleColorMode = e => {
-    setColorMode(isDark ? `light` : `dark`)
-  }
-
   return (
     <header>
       <div
@@ -105,13 +72,6 @@ export default ({ children, title, ...props }) => {
         >
           <Title {...props}>{title}</Title>
           {children}
-          <Switch
-            aria-label="Toggle dark mode"
-            checkedIcon={checkedIcon}
-            uncheckedIcon={uncheckedIcon}
-            checked={isDark}
-            onChange={toggleColorMode}
-          />
         </div>
         {props.location.pathname === rootPath && <Bio />}
       </div>
