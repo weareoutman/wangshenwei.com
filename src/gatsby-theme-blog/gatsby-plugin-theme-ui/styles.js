@@ -3,7 +3,9 @@ import defaultThemeStyles from "gatsby-theme-blog/src/gatsby-plugin-theme-ui/sty
 
 export default merge(defaultThemeStyles, {
   pre: {
-    p: 2
+    p: 2,
+    marginBottom: 3,
+    marginX: -2
   },
   blockquote: {
     paddingX: 3,
