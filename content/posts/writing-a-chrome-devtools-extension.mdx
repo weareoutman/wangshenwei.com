@@ -1,6 +1,6 @@
 ---
 title: 编写一个 Chrome 开发者工具的扩展程序
-date: 2020-04-20
+date: 2020-04-25
 ---
 
 在工作中的一个项目里，我们的前端框架建立在 [Web Components] 技术之上，每个界面都由数个到数十个 [Custom Elements] 组成。它们基于 Web 标准技术，因此开发者可以直接使用浏览器原生的开发者工具来辅助开发和调试。例如利用 Chrome 的开发者工具，我们可以直接审查指定的 Custom Elements，也可以在控制台中打印出它们的属性等等。
@@ -9,9 +9,7 @@ date: 2020-04-20
 
 浏览器原生的开发者工具已经不能满足需求，因此我们决定扩展一下它的能力。
 
-<hr class="divider" />
-
-在讲述如何编写这个扩展程序前，先看两张成品图片，以便理解我们想要拓展的能力。我们为开发者工具新建了一个 *“Bricks”* 的面板，它可以列出当前审查的页面由自定义元素组成的渲染树，鼠标经过时可以实时显示对应元素的轮廓，点击选中一个元素则可以显示它的业务属性和事件配置等。
+在讲述如何编写这个扩展程序前，先看两张成品图片，以便理解我们想要拓展的能力。我们为开发者工具新建了一个 *“Bricks”* 面板，它可以列出当前审查的页面由自定义元素组成的渲染树，鼠标经过时可以实时显示对应元素的轮廓，点击选中一个元素则可以显示它的业务属性和事件配置等。
 
 ![Bricks Panel](../assets/writing-a-chrome-devtools-extension/screen-shot-bricks-panel.jpg)
 
@@ -21,9 +19,9 @@ date: 2020-04-20
 
 <hr class="divider" />
 
-> 作者假设你已经有了编写 Chrome *普通扩展程序*的基础知识，如果没有，请先参考《[What are extensions?]》。
+> 本文不会从头讲述如何一步一步地编写扩展程序，对于这些我们应该去阅读[官方开发手册]。本文主要侧重讲述其中不易理解、或相对困难的部分，如扩展程序中各模块的通讯方式、限制、以及如何突破这些限制等。
 
-接下来进入正题，首先阅读官方文档《[Extending DevTools]》，官方的这张图很好地解释了一个 Chrome 开发者工具扩展程序所涉及的几个主要对象及其之间的关系：
+接下来进入正题，首先阅读官方的几篇文档《[Getting Started Tutorial]》、《[Extending DevTools]》，其中下面这张图很好地解释了一个 Chrome 开发者工具扩展程序所涉及的几个主要模块及其之间的关系：
 
 ![DevTools Extension](../assets/writing-a-chrome-devtools-extension/devtools-extension.png)
 
@@ -57,7 +55,7 @@ DevTools page:
 例如以下 content script 可以按预期工作：
 
 ```js
-// `your-content-script.js`
+/* @file: your-content-script.js */
 window.addEventListener("DOMContentLoaded", () => {
   document.body.style.background = "red";
 });
@@ -66,7 +64,7 @@ window.addEventListener("DOMContentLoaded", () => {
 而以下脚本无法按预期工作：
 
 ```js
-// `your-content-script.js`
+/* @file: your-content-script.js */
 window.addEventListener("DOMContentLoaded", () => {
   // 假设审查的页面给 `body` 添加了自定义属性 `yourAddon`，
   // 但由于它不是标准 DOM 接口，content scripts 无法访问它，
@@ -88,7 +86,7 @@ window.addEventListener("DOMContentLoaded", () => {
 再看 `chrome.devtools.inspectedWindow.eval`，它也能以当前审查的页面为上下文执行代码，它接收一段字符串作为代码执行，并且将执行结果传递给回调函数，例如：
 
 ```js
-// `your-devtools-page.js`
+/* @file: your-devtools-page.js */
 chrome.devtools.inspectedWindow.eval("document.body.yourAddon", (result) => {
   // 假设审查的页面给 `body` 添加了自定义属性 `yourAddon` 值为 `"hello world"`，
   // 将打印 `"hello world"`。
@@ -96,14 +94,14 @@ chrome.devtools.inspectedWindow.eval("document.body.yourAddon", (result) => {
 });
 ```
 
-这看起来可以让我们拿到想要的渲染树信息了。但是官方文档也说明了它对代码执行结果的要求：*合法的 JSON 对象*，即可以序列化为 JSON 的对象，它只能包含 JavaScript 原始类型的值、并且不包含循环引用。这意味着它的能力受到了限制，例如无法直接传递原生事件对象 `Event`、`CustomEvent` 或者内部包含重复引用的属性，不过我们先暂时搁置这个潜在的问题。
+这看起来可以让我们拿到想要的渲染树信息了。但是官方文档也说明了它对代码执行结果的要求：*合法的 JSON 对象*，即可以序列化为 JSON 的对象，它只能包含 JavaScript 原始类型的值、并且不包含循环引用。这意味着它的能力受到了限制，例如无法直接传递原生事件对象 `Event`、`CustomEvent` 或者内部包含循环引用的属性，不过我们先暂时搁置这个潜在的问题。
 
 渲染树信息可以由框架封装接口提供给 `chrome.devtools.inspectedWindow.eval` 调用，但这意味着框架需要额外捆绑扩展程序专用的代码逻辑，并且这些逻辑与扩展程序紧密相关，这增加了代码耦合度。
 
 为了尽量减少对框架的侵入、降低耦合，还需要进一步探索。在参考了 [React Developer Tools] 的源码后，我发现了能让代码在真正的审查页面的上下文中执行的方法。在 content scripts 中动态插入 `<script>` 标签，插入 `<script>` 的过程是标准的 DOM 操作，仍然在 content scripts 的孤立世界中，而它指向的代码文件则跳脱了出来！
 
 ```js
-// `your-content-script.js`
+/* @file: your-content-script.js */
 const script = document.createElement("script");
 // `hook.js` 将在真正的审查页面的上下文中执行。
 script.src = chrome.runtime.getURL("hook.js");
@@ -114,19 +112,19 @@ script.parentNode.removeChild(script);
 由此，获取渲染树信息的代码逻辑可以放在 `hook.js` 中，并在 DevTools page 中使用 Eval 接口调用它。
 
 ```js
-// `hook.js`
+/* @file: hook.js */
 window.getRenderTree = () => { ... }
 
-// `your-devtools-page.js`
+/* @file: your-devtools-page.js */
 chrome.devtools.inspectedWindow.eval("window.getRenderTree()", (result) => {
   // Display render tree.
 });
 ```
 
-渲染树可以显示了，那么如何审查单个自定义元素呢？Eval 接口接收的是一串字符串代码，无法为它传递引用，但我们可以想办法在 `hook.js` 中存储一个映射表来存放自增 ID 与自定义元素的关系，Eval 调用时只传递 ID。
+渲染树可以显示了，那么如何获取单个自定义元素呢？Eval 接口接收的是一串字符串代码，无法为它传递引用，但我们可以想办法在 `hook.js` 中存储一个映射表来存放自增 ID 与自定义元素的关系，Eval 调用时只传递 ID。
 
 ```js
-// `hook.js`
+/* @file: hook.js */
 // 简易自增 ID 工厂
 let uniqueIdCounter = 0;
 function uniqueId() {
@@ -141,7 +139,7 @@ window.getRenderTree = () => {
 // 获取元素属性信息
 window.getElement = (uid) => uidToElement.get(uid);
 
-// `your-devtools-page.js`
+/* @file: your-devtools-page.js */
 chrome.devtools.inspectedWindow.eval(
   `window.getElement(${uid}).props`,
   (result) => {
@@ -153,7 +151,7 @@ chrome.devtools.inspectedWindow.eval(
 之前提到过 Eval 接口还可以访问[开发者工具控制台 API]，例如我们可以调用 `inspect()` 来审查元素或函数：
 
 ```js
-// `your-devtools-page.js`
+/* @file: your-devtools-page.js */
 // `inspect(element)` 将打开 Element 面板并选中该元素。
 chrome.devtools.inspectedWindow.eval(
   `inspect(window.getElement(${uid}));`
@@ -182,17 +180,101 @@ Hook
 
 在这个通信过程中，我们再次遇到了和 Eval 接口一样的问题：只能传递 JSON 序列化的数据。序列化是很多通讯方式的基础，遥远如书信，信息被序列化为文字，近如网络，信息被序列化为数字信号。序列化再反序列化后的得到的信息其实不是真正的原始信息，而是一份有损的拷贝，正如电话里听到的是手机扬声器还原的对方的声音，网络视频里看到的是屏幕上绘制的对方镜头的影像拷贝。
 
-那如何解决 JSON 序列化无法支持的重复/循环引用和复杂对象类型信息呢？再次参考 React Developer Tools 的源码，它使用了一对命名为 `dehydrate` 和 `hydrate` （脱水和补水）的函数，发送消息前，`dehydrate` 将原始信息进行*脱水*，将复杂对象类型转换为特定的可以被 JSON 序列化的结构信息，接收消息时，对数据进行*补水*，还原得到原始的对象类型。
+我们的扩展程序需要展示一些数据结构信息，其中难免包含复杂对象类型或循环引用的数据，那如何解决 JSON 序列化的问题呢？再次参考 React Developer Tools 的源码，它使用了一对命名为 `dehydrate` 和 `hydrate` （脱水和补水）的函数，发送消息前，`dehydrate` 将原始信息进行*脱水*，将复杂对象类型转换为特定的可以被 JSON 序列化的结构信息，接收消息时，对数据进行*补水*，还原得到原始的对象类型。
 
 这对函数的命名有点意思，让我想到了科幻小说《三体》里的情节，三体人为了在乱纪元中生存，会自我*脱水*进入休眠状态，而到了恒纪元则完成*补水*重新苏醒。这或许正如复杂数据想要在通信中保持相对完整也需要进行脱水和补水一样。
 
-回到主题，React Developer Tools 的实现中没有包含对重复/循环引用的处理，它通过限制递归层级绕开了这个问题。
+回到主题，一个简单的脱水效果大约如下：
 
-> 注：本文代码均只作示意用途，非实际可运行代码。
+```js
+// 脱水前
+const event = new CustomEvent("something-happened", {
+  detail: "oops"
+});
+const input = {
+  firedEvent: event
+};
 
+// 执行脱水
+const output = dehydrate(input);
+
+// 脱水后
+expect(output).toEqual({
+  // 普通对象如 `{ firedEvent: ... }` 保留原结构
+  firedEvent: {
+    // 复杂对象被转换为特定结构，并附带一些跟该类型相关的信息
+    // `__dehydrated_use_only__` 是一个用于识别脱水数据的特殊 key
+    __dehydrated_use_only__: {
+      type: "object",
+      constructorName: "CustomEvent",
+      children: {
+        type: "something-happened",
+        detail: "oops"
+      }
+    }
+  }
+});
+```
+
+脱水后的数据不再包含循环引用，并且在补水后可以还原得到原始对象类型的相关信息，虽然是有损的，但已经能满足界面展示数据类型的需求。
+
+但是，React Developer Tools 的实现中没有包含对循环引用的处理，它通过限制递归层级绕开了这个问题，只在用户需要访问更深层级的数据时再去实时获取。
+
+我尝试采取了另一种方案，在返回的数据中额外包含一个映射表，存储所有被多次引用的对象，同时对 `dehydrate` 的数据扩展一种映射类型，表示数据存放在映射表中。优化后的脱水效果大约如下：
+
+```js
+// 脱水前
+const person = {
+  name: "Good Man"
+};
+person.loves = person;
+
+// 执行脱水
+const dehydratedPerson = dehydrate(person);
+
+// 脱水后
+// `value` 固定为 `dehydrate()` 结果的主体数据
+expect(dehydratedPerson.value).toEqual({
+  name: "Good Man",
+  loves: {
+    __dehydrated_use_only__: {
+      type: "ref",
+      ref: 0
+    }
+  }
+});,
+// `repo` 固定为 `dehydrate()` 结果的引用映射表
+expect(dehydratedPerson.repo).toEqual([
+  {
+    name: "Good Man",
+    loves: {
+      __dehydrated_use_only__: {
+        type: "ref",
+        ref: 0
+      }
+    }
+  }
+]);
+```
+
+补水后则可以还原循环引用关系：
+
+```js
+// 补水
+const person = hydrate(dehydratedPerson);
+expect(person.name).toBe("Good Man");
+expect(person.loves).toBe(person);
+```
+
+至此，当下的技术困难都已经被我们解决。
+
+> 注：本文代码均只作示意用途，非实际代码。该扩展程序目前还在 Chrome Web Store 审核中，源码托管在 GitHub：[brick-next-devtools]。
+
+[官方开发手册]: https://developer.chrome.com/extensions
 [Web Components]: https://developer.mozilla.org/en-US/docs/Web/Web_Components
 [Custom Elements]: https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements
+[Getting Started Tutorial]: https://developer.chrome.com/extensions/getstarted
 [Extending DevTools]: https://developer.chrome.com/extensions/devtools
-[What are extensions?]: https://developer.chrome.com/extensions
 [React Developer Tools]: https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi
 [开发者工具控制台 API]: https://developers.google.com/web/tools/chrome-devtools/console/utilities
+[brick-next-devtools]: https://github.com/easyops-cn/brick-next-devtools
