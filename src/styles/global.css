@@ -4,7 +4,7 @@ p.figure-caption {
   font-size: 87.5%;
   margin-top: -14px;
   font-style: italic;
-  
+
   width: fit-content;
   max-width: 90%;
   margin-left: auto;
@@ -25,4 +25,14 @@ hr.divider {
 
 hr.divider::before {
   content: "...";
+}
+
+[data-reach-skip-nav-link] {
+  display: none;
+}
+
+@media screen and (min-width:40em){
+  h1 > a {
+    font-size: 32px;
+  }
 }

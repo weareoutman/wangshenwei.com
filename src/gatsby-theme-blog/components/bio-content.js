@@ -9,6 +9,6 @@ export default () => (
   <Fragment>
     Personal Blog by <Styled.a href="https://wangshenwei.com/">Shenwei Wang</Styled.a>.
     <br />
-    Coding. Hiking. Biking. Enjoying.
+    Coding, Hiking, Biking, Enjoying.
   </Fragment>
 )

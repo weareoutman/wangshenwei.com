@@ -15,4 +15,5 @@ const Footer = ({ socialLinks }) => (
     <Styled.a href="https://github.com/weareoutman">github</Styled.a>
   </footer>
 )
+
 export default Footer
