@@ -29,8 +29,13 @@ module.exports = {
     },
     {
       resolve: `gatsby-theme-blog`,
-      options: {},
+      options: {
+        preset: "@theme-ui/preset-swiss",
+        prismPreset: "vs-dark",
+        webfontURL: `https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:wght@700;900&display=swap`,
+      },
     },
+    // `gatsby-theme-blog-darkmode`,
     {
       resolve: `gatsby-plugin-manifest`,
       options: {
@@ -53,11 +58,12 @@ module.exports = {
     title: `WeAreOutMan`,
     author: `Shenwei Wang`,
     description: `Personal Blog by Shenwei Wang`,
+    siteUrl: `https://wangshenwei.com`,
     social: [
       {
         name: `github`,
         url: `https://github.com/weareoutman`,
       },
-    ],
+    ]
   },
 }
