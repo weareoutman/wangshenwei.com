@@ -27,6 +27,11 @@ hr.divider::before {
   content: "...";
 }
 
+footer > hr {
+  margin-bottom: 16px;
+}
+
+/* skip-nav not working well in single-page-app */
 [data-reach-skip-nav-link] {
   display: none;
 }
@@ -34,5 +39,9 @@ hr.divider::before {
 @media screen and (min-width:40em){
   h1 > a {
     font-size: 32px;
+  }
+
+  .prism-code {
+    border-radius: 10px;
   }
 }
