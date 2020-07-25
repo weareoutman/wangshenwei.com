@@ -17,7 +17,7 @@ export default {
   lineHeights: {
     body: 1.75
   },
-  maxWidth: {
+  sizes: {
     container: 704
   },
   styles: {
@@ -28,7 +28,6 @@ export default {
       padding: 3,
       marginBottom: 3,
       marginX: -3,
-      borderRadius: "10px",
     },
     code: {
       color: '#9cdcfe'
