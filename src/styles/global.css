@@ -31,6 +31,18 @@ footer > hr {
   margin-bottom: 16px;
 }
 
+a[role="button"] {
+  cursor: pointer;
+}
+
+.highlight {
+  border-left: 3px solid hsl(10,60%,50%);
+  padding-left: 13px;
+  padding-right: 16px;
+  margin-left: -16px;
+  margin-right: -16px;
+}
+
 /* skip-nav not working well in single-page-app */
 [data-reach-skip-nav-link] {
   display: none;

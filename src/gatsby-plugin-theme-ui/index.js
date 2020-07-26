@@ -1,15 +1,23 @@
-// import darkTheme from '@theme-ui/preset-deep';
+import darkTheme from '@theme-ui/preset-deep';
+import lightTheme from '@theme-ui/preset-swiss';
 
 export default {
-  // useColorSchemeMediaQuery: true,
+  useColorSchemeMediaQuery: true,
   // useLocalStorage: false,
-  // colors: {
-  //   modes: {
-  //     dark: {
-  //       ...darkTheme.colors
-  //     }
-  //   }
-  // },
+  colors: {
+    "inline-code": lightTheme.colors.secondary,
+    modes: {
+      dark: {
+        // ...darkTheme.colors
+        text: darkTheme.colors.text,
+        background: darkTheme.colors.background,
+        muted: darkTheme.colors.muted,
+        primary: 'rgb(242, 95, 92)',
+        secondary: lightTheme.colors.primary,
+        "inline-code": darkTheme.colors.secondary,
+      }
+    }
+  },
   fonts: {
     body: `'Merriweather','Georgia',serif`,
     heading: `Montserrat,sans-serif`,
@@ -32,6 +40,10 @@ export default {
     code: {
       color: '#9cdcfe'
     },
+    inlineCode: {
+      color: 'inline-code',
+      paddingX: '3px'
+    },
     p: {
       marginY: 4
     },
@@ -46,7 +58,7 @@ export default {
     },
   },
   prism: {
-    ".property": {
+    ".property,.title,.important": {
       color: "inherit",
     },
   },
