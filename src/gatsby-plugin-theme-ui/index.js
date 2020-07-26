@@ -2,7 +2,7 @@ import darkTheme from '@theme-ui/preset-deep';
 import lightTheme from '@theme-ui/preset-swiss';
 
 export default {
-  useColorSchemeMediaQuery: true,
+  // useColorSchemeMediaQuery: true,
   // useLocalStorage: false,
   colors: {
     "inline-code": lightTheme.colors.secondary,
