@@ -11,6 +11,8 @@ const Footer = ({ socialLinks }) => (
     © {new Date().getFullYear()}, Powered by
     {` `}
     <Styled.a href="https://www.gatsbyjs.org">Gatsby</Styled.a>
+    {` & `}
+    <Styled.a href="https://www.netlify.com/">Netlify</Styled.a>
     {` `}&bull;{` `}
     <Styled.a href="https://github.com/weareoutman">github</Styled.a>
   </footer>

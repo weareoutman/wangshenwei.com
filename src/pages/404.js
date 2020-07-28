@@ -1,5 +1,5 @@
 /** @jsx jsx */
-import { Styled, jsx, Button } from "theme-ui"
+import { Styled, jsx } from "theme-ui"
 import { graphql, Link } from "gatsby"
 
 import Layout from "gatsby-theme-blog/src/components/layout"
