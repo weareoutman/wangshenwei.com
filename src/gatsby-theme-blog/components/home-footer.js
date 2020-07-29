@@ -12,7 +12,7 @@ const Footer = ({ socialLinks }) => (
     {` `}
     <Styled.a href="https://www.gatsbyjs.org">Gatsby</Styled.a>
     {` & `}
-    <Styled.a href="https://www.netlify.com/">Netlify</Styled.a>
+    <Styled.a href="https://aws.amazon.com/amplify/">AWS Amplify</Styled.a>
     {` `}&bull;{` `}
     <Styled.a href="https://github.com/weareoutman">github</Styled.a>
   </footer>
