@@ -1,13 +1,10 @@
 import React, { Fragment } from "react"
+import { Link } from "gatsby"
 import { Styled } from "theme-ui"
-
-/**
- * Change the content to add your own bio
- */
 
 export default () => (
   <Fragment>
-    Personal Blog by <Styled.a href="https://wangshenwei.com/">Shenwei Wang</Styled.a>.
+    Personal Blog by <Styled.a as={Link} to="/">Shenwei Wang</Styled.a>.
     <br />
     Coding, Hiking, Biking, Enjoying.
   </Fragment>
