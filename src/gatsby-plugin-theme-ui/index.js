@@ -22,6 +22,7 @@ export default {
     body: `'Merriweather','Georgia',serif`,
     heading: `Montserrat,sans-serif`,
   },
+  fontSizes: [12, 14, 16, 20, 24, 32, 40, 48, 64],
   lineHeights: {
     body: 1.75
   },
@@ -32,9 +33,21 @@ export default {
     root: {
       fontSize: 2
     },
+    h2: {
+      fontSize: [4, 5]
+    },
+    h3: {
+      fontSize: [3, 4]
+    },
+    h4: {
+      fontSize: [2, 3]
+    },
+    h5: {
+      fontSize: [1, 2]
+    },
     pre: {
       padding: 3,
-      marginBottom: 3,
+      marginBottom: 4,
       marginX: -3,
     },
     code: {
@@ -58,7 +71,7 @@ export default {
     },
   },
   prism: {
-    ".property,.title,.important": {
+    ".property,.title,.important,.boolean": {
       color: "inherit",
     },
   },

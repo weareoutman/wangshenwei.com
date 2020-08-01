@@ -69,7 +69,7 @@ const Header = ({ children, title, ...props }) => (
           display: `flex`,
           justifyContent: `space-between`,
           alignItems: `center`,
-          mb: 4,
+          mb: props.location.pathname === rootPath ? 4 : 2,
         })}
       >
         <Title {...props}>{title}</Title>
