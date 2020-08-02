@@ -1,0 +1,72 @@
+---
+title: Brick Next June & July 2020
+date: 2019-10-11
+tags:
+  - hidden
+---
+
+import SlideStart from "../../src/components/slide-start"
+
+<SlideStart text="Let's Start!" />
+
+<div class="slide-page-start" />
+
+## What's New
+
+- [UseProvider](#useprovider)
+- Context
+- Brick Documents
+- Menu
+- I18N
+
+<div class="slide-page-start" />
+
+## UseProvider
+
+Legacy usage:
+
+```yaml
+routes:
+  - path: ${APP.homepage}/your-page
+    # Define providers before using
+    providers:
+      - your.any-provider
+
+    bricks:
+      - brick: your.another-provider
+        bg: true
+
+      - brick: your.any-brick
+        lifeCycle:
+          useResolves:
+            # Escape `.` for CSS selectors
+            provider: your\.any-provider
+
+      - brick: your.another-brick
+        events:
+          something.happen:
+            target: your\.another-provider
+            method: resolve
+            # callback: ...
+```
+
+<div class="slide-page-start" />
+
+Now simpler usage:
+
+```yaml
+bricks:
+  - brick: your.any-brick
+    lifeCycle:
+      useResolves:
+        # Ready to use
+        useProvider: your.any-provider
+
+  - brick: your.another-brick
+    events:
+      something.happen:
+        useProvider: your.another-provider
+        # callback: ...
+```
+
+<div class="slide-title" title="Any Questions?" />
