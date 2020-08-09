@@ -45,6 +45,10 @@ export default {
     h5: {
       fontSize: [1, 2]
     },
+    a: {
+      textDecoration: "none",
+      boxShadow: "0 1px 0 0 currentColor"
+    },
     pre: {
       padding: 3,
       marginBottom: 4,
