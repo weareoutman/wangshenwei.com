@@ -14,6 +14,7 @@ const PostLink = ({ title, slug, date, excerpt }) => (
           as={Link}
           sx={{
             textDecoration: `none`,
+            boxShadow: `none`
           }}
           to={slug}
         >
