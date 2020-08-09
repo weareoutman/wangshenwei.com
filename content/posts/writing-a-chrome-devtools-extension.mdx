@@ -83,7 +83,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 我们想要展示的、由自定义元素组成的渲染树及其业务属性等信息，正是标准 DOM 接口以外的数据，content scripts 无法直接访问，需要另辟蹊径。
 
-再看 `chrome.devtools.inspectedWindow.eval`，它也能以当前审查的页面为上下文执行代码，它接收一段字符串作为代码执行，并且将执行结果传递给回调函数，例如：
+再看 `inspectedWindow.eval`，它也能以当前审查的页面为上下文执行代码，它接收一段字符串作为代码执行，并且将执行结果传递给回调函数，例如：
 
 ```js
 /* @file: your-devtools-page.js */
@@ -96,7 +96,7 @@ chrome.devtools.inspectedWindow.eval("document.body.yourAddon", (result) => {
 
 这看起来可以让我们拿到想要的渲染树信息了。但是官方文档也说明了它对代码执行结果的要求：*合法的 JSON 对象*，即可以序列化为 JSON 的对象，它只能包含 JavaScript 原始类型的值、并且不包含循环引用。这意味着它的能力受到了限制，例如无法直接传递原生事件对象 `Event`、`CustomEvent` 或者内部包含循环引用的属性，不过我们先暂时放下这个问题。
 
-渲染树信息可以由框架封装接口提供给 `chrome.devtools.inspectedWindow.eval` 调用，但这意味着框架需要额外捆绑扩展程序专用的代码逻辑，并且这些逻辑与扩展程序紧密相关，这增加了代码耦合度。
+渲染树信息可以由框架封装接口提供给 `inspectedWindow.eval` 调用，但这意味着框架需要额外捆绑扩展程序专用的代码逻辑，并且这些逻辑与扩展程序紧密相关，这增加了代码耦合度。
 
 为了尽量减少对框架的侵入、降低耦合，还需要进一步探索。在参考了 [React Developer Tools] 的源码后，我发现了能让代码在真正的审查页面的上下文中执行的方法。在 content scripts 中动态插入 `<script>` 标签，插入 `<script>` 的过程是标准的 DOM 操作，仍然在 content scripts 的孤立世界中，而它指向的代码文件则跳脱了出来！
 

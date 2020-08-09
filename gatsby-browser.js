@@ -1,15 +1,17 @@
 import "./src/styles/global.css"
 
 export const onInitialClientRender = () => {
-  const search = window.location.search
+  window.addEventListener("slide.start", slideInitialize)
 
-  if (!search) {
-    return
-  }
+  const search = window.location.search || ""
 
   const headless = search.includes("headless=1")
   if (headless) {
     document.body.classList.add("headless")
+  }
+
+  if (search.includes("slide=1")) {
+    slidePreInitialize()
   }
 
   function slidePreInitialize() {
@@ -17,16 +19,9 @@ export const onInitialClientRender = () => {
     document.addEventListener("keydown", slideInitialize)
   }
 
-  if (search.includes("slide=1")) {
-    slidePreInitialize()
-  }
-
-  function isDivWithClass(node, className) {
-    return node.tagName === "DIV" && node.classList.contains(className)
-  }
-
   function slideInitialize(initialEvent) {
     if (!(
+      initialEvent.type === "slide.start" ||
       initialEvent.type === "dblclick" || (
         initialEvent.type === "keydown" &&
         initialEvent.key === "ArrowRight"
@@ -107,7 +102,7 @@ export const onInitialClientRender = () => {
     }
 
     pages = pages.filter(page => page.length > 0)
-    let cursor = 0
+    let cursor = -1
 
     function hashchange() {
       const anchor = window.location.hash === "#" ? "" : window.location.hash
@@ -161,6 +156,9 @@ export const onInitialClientRender = () => {
 
     function renderPage(pageNumber) {
       restoreUnlocked = false
+      if (cursor === pageNumber) {
+        return
+      }
       cursor = pageNumber
       for (const node of Array.from(section.childNodes)) {
         node.remove()
@@ -244,5 +242,9 @@ export const onInitialClientRender = () => {
 
     window.location.hash = "#!0"
     renderPage(0)
+  }
+
+  function isDivWithClass(node, className) {
+    return node.tagName === "DIV" && node.classList.contains(className)
   }
 }

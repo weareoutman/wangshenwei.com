@@ -3,7 +3,7 @@ import { jsx, css, useColorMode, Styled } from "theme-ui"
 
 function ColorModeSwitch() {
   const [colorMode, setColorMode] = useColorMode()
-  const toggleColorMode = (e) => {
+  const toggleColorMode = () => {
     setColorMode(mode => mode === `dark` ? `light` : `dark`)
   }
 
