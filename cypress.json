@@ -1,4 +1,5 @@
 {
+  "projectId": "swukjf",
   "baseUrl": "http://localhost:9000",
-  "projectId": "swukjf"
+  "videoUploadOnPasses": false
 }
