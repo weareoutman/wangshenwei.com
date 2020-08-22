@@ -9,8 +9,10 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "test": "echo 'nothing to test'",
-    "deploy": "gatsby build && gh-pages --no-history -d public -b deploy -r https://$GH_TOKEN@github.com/weareoutman/wangshenwei.com.git",
-    "preview": "gatsby build && gh-pages --no-history -d public -b preview -r https://$GH_TOKEN@github.com/weareoutman/wangshenwei.com.git"
+    "deploy": "gh-pages --no-history -d public -b deploy -r https://$GH_TOKEN@github.com/weareoutman/wangshenwei.com.git",
+    "preview": "gh-pages --no-history -d public -b preview -r https://$GH_TOKEN@github.com/weareoutman/wangshenwei.com.git",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "dependencies": {
     "@theme-ui/preset-deep": "^0.3.0",
@@ -24,6 +26,7 @@
     "react-dom": "^16.13.1"
   },
   "devDependencies": {
+    "cypress": "^5.0.0",
     "gh-pages": "^3.1.0",
     "sharp": "^0.25.4"
   }
