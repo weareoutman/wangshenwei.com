@@ -8,9 +8,6 @@ addons:
       - ttf-wqy-microhei
       - fonts-wqy-zenhei
       - ttf-wqy-zenhei
-before_script:
-  - npm install -g gatsby-cli
-  - npm install -g wait-on
 node_js:
   - "12"
 cache:
@@ -23,20 +20,25 @@ branches:
     - master
     - wip/preview
 install: yarn install --frozen-lockfile
+before_script:
+  - npm install -g gatsby-cli
+  - npm install -g start-server-and-test
 script:
-  - yarn run build
-  - yarn run serve &
-  - wait-on http://localhost:9000
-  - yarn run cypress:run --record
-  - kill $(jobs -p) || true
+  - yarn run build:e2e
+  - yarn run test:e2e:ci
+  - yarn run clean
 deploy:
   - provider: script
-    script: yarn run deploy
+    script:
+      - yarn run build
+      - yarn run deploy
     skip_cleanup: true
     on:
       branch: master
   - provider: script
-    script: yarn run preview
+    script:
+      - yarn run build
+      - yarn run preview
     skip_cleanup: true
     on:
       branch: wip/preview
