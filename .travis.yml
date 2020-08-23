@@ -25,7 +25,7 @@ before_script:
   - npm install -g start-server-and-test
 script:
   - yarn run build:e2e
-  - yarn run test:2e2:ci
+  - yarn run test:e2e:ci
   - yarn run clean
 deploy:
   - provider: script
