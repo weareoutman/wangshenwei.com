@@ -48,6 +48,11 @@ a[role="button"] {
   display: none;
 }
 
+.search-mark {
+  /* text-decoration: wavy underline; */
+  box-shadow: 0 1px 0 0 currentColor;
+}
+
 .slide-page-start,
 .slide-page-end,
 .slide-ignore-start,
