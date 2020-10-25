@@ -28,18 +28,15 @@ script:
   - yarn run build:e2e
   - yarn run test:e2e:ci
   - yarn run clean
+  - yarn run build
 deploy:
   - provider: script
-    script:
-      - yarn run build
-      - yarn run deploy
+    script: yarn run deploy
     skip_cleanup: true
     on:
       branch: master
   - provider: script
-    script:
-      - yarn run build
-      - yarn run preview
+    script: yarn run preview
     skip_cleanup: true
     on:
       branch: wip/preview
