@@ -75,8 +75,11 @@ export default {
     },
   },
   prism: {
-    ".property,.title,.important,.boolean": {
+    ".property,.title,.important,.boolean,.regex": {
       color: "inherit",
+    },
+    ".regex": {
+      color: "var(--theme-ui-colors-secondary,hsl(10,60%,50%))",
     },
   },
 }
