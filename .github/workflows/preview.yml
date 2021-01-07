@@ -17,8 +17,7 @@ jobs:
         node-version: [14.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
-    environment:
-      name: cypress
+    environment: cypress
 
     steps:
     - uses: actions/checkout@v2
@@ -31,6 +30,8 @@ jobs:
     - run: yarn install --frozen-lockfile
     - run: yarn run build:e2e
     - run: yarn run test:e2e:ci
+      env:
+        CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
     - run: yarn run clean
     - run: yarn run build
     - name: Deploy
