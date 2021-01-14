@@ -10,8 +10,6 @@
     "serve": "gatsby serve",
     "clean": "gatsby clean",
     "test": "echo 'nothing to test'",
-    "deploy": "gh-pages --no-history -d public -b deploy -r https://$GH_TOKEN@github.com/weareoutman/wangshenwei.com.git",
-    "preview": "gh-pages --no-history -d public -b preview -r https://$GH_TOKEN@github.com/weareoutman/wangshenwei.com.git",
     "cypress:open": "cypress open",
     "cypress:run": "cypress run",
     "cypress:run:ci": "cypress run --record",
