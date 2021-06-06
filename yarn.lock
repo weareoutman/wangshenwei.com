@@ -1798,10 +1798,10 @@
     "@emotion/styled" "^10.0.0"
     "@mdx-js/react" "^1.0.0"
 
-"@theme-ui/preset-deep@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@theme-ui/preset-deep/-/preset-deep-0.3.0.tgz#acdf3028ef8dc5af2d20b5a82f9fed1062cf74d6"
-  integrity sha512-5XZckaa1nhm7afb57bCMGKR/TCaf9cjTwhNkfAaFjKVklVB4CCinS43zQ0sDadwd3oihCJmGbXyvgwBb8mp/iw==
+"@theme-ui/preset-deep@^0.9.0":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@theme-ui/preset-deep/-/preset-deep-0.9.1.tgz#44db549b554b6107c18e80304915d2dac8d6bab5"
+  integrity sha512-U3RTFjBO2VM/8/Smbe177oVSIM72tK6qeiBR0CRuYHhX8x49ZR3Z3LJtr/DsdruBGs10+Yh+nyEh+9UwQn5qsw==
 
 "@theme-ui/preset-swiss@^0.3.0":
   version "0.3.0"
