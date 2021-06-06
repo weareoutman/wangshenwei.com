@@ -1803,10 +1803,10 @@
   resolved "https://registry.yarnpkg.com/@theme-ui/preset-deep/-/preset-deep-0.3.0.tgz#acdf3028ef8dc5af2d20b5a82f9fed1062cf74d6"
   integrity sha512-5XZckaa1nhm7afb57bCMGKR/TCaf9cjTwhNkfAaFjKVklVB4CCinS43zQ0sDadwd3oihCJmGbXyvgwBb8mp/iw==
 
-"@theme-ui/preset-swiss@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@theme-ui/preset-swiss/-/preset-swiss-0.3.0.tgz#ea170bc6e29d92a2e5b6e4cf90a17c68ca6f38f9"
-  integrity sha512-ijH0FPHMR9tT7ZOIV73lY4VHEvah2FftwrYUt7w4UhjId8SnKBp5GitU+IG4E5mRdP8IiPRQCBrfs9IuSFxnWA==
+"@theme-ui/preset-swiss@^0.9.0":
+  version "0.9.1"
+  resolved "https://registry.yarnpkg.com/@theme-ui/preset-swiss/-/preset-swiss-0.9.1.tgz#99a23528a4c071df2c107a04c2261045a6ee50dd"
+  integrity sha512-I4otVuuetmIu4nWCnpZi4XSQgbutwBzyleuIYwWqgqPd9sdZ0P6S4aJPVo/asLdvCfiVBHNq4L3MJpz4jqIbyg==
 
 "@theme-ui/prism@0.4.0-alpha.3":
   version "0.4.0-alpha.3"
