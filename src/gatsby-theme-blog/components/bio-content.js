@@ -6,6 +6,6 @@ export default () => (
   <Fragment>
     Personal Blog by <Styled.a as={Link} to="/">Shenwei Wang</Styled.a>.
     <br />
-    Coding, Hiking, Biking, Enjoying.
+    Writing code, raising kid, exploring the World.
   </Fragment>
 )
