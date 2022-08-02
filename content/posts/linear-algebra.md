@@ -1,4 +1,7 @@
-# Notes
+---
+title: Notes for Linear Algebra
+date: 2022-08-03
+---
 
 ## 1 Linear Equations in Linear Algebra
 
@@ -353,7 +356,7 @@ $$
 
 > THEOREM 10 (p121)
 >
-> **Column--Row Expansion of $AB$**
+> **Column-Row Expansion of $AB$**
 >
 > If $A$ is $m \times n$ and B is $n \times p$, then
 >
@@ -361,17 +364,64 @@ $$
 > \begin{align*}
 > AB &=
 >   \begin{bmatrix}
->     col_1(A) & col_2(A) & \cdots & col_n(A)
+>     \mathrm{col}_1(A) & \mathrm{col}_2(A) & \cdots & \mathrm{col}_n(A)
 >   \end{bmatrix}
 >   \begin{bmatrix}
->     row_1(B) \\
->     row_2(B) \\
+>     \mathrm{row}_1(B) \\
+>     \mathrm{row}_2(B) \\
 >     \vdots \\
->     row_n(B)
+>     \mathrm{row}_n(B)
 >   \end{bmatrix} \\
->    &= col_1(A)row_1(B) + \dotsb + col_n(A)row_n(B)
+>    &= \mathrm{col}_1(A)\mathrm{row}_1(B) + \dotsb + \mathrm{col}_n(A)\mathrm{row}_n(B)
 > \end{align*}
 > $$
+
+### 2.5 Matrix Factorizations
+
+> **Algorithm for an LU Factorization**
+>
+> 1. Reduce $A$ to an echelon form $U$ by a sequence of row replacement operations, if possible.
+> 2. Place entries in $L$ such that the *same sequence of row operations* reduces *L* to *I*.
+
+### 2.6 The Leontief Input-Output Model
+
+> **The Leontief Input-Output Model, or Production Equation**
+>
+> $$
+> \begin{array}{c}
+> \mathbf{x} & = & C\mathbf{x} & + & \mathbf{d} \\
+> \text{\color{aqua}{Amount}} & & \text{\color{aqua}{Intermediate}} & & \text{\color{aqua}{Final}} \\
+> \text{\color{aqua}{produced}} & & \text{\color{aqua}{demand}} & & \text{\color{aqua}{demand}}
+> \end{array}
+> $$
+
+It may also be written as $I\mathbf{x} - C\mathbf{x} = \mathbf{d}$, or $(I - C)\mathbf{x} = \mathbf{d}$.
+
+> THEOREM 11 (p136)
+>
+> Let $C$ be the consumption matrix for an economy, and let $\mathbf{d}$ be the final demand. If $C$ and $\mathbf{d}$ have nonnegative entries and if each column sum of $C$ is less than 1, then $(I-C)^{-1}$ exists and the production vector
+>
+> $$
+> \mathbf{x} = (I - C)^{-1} \mathbf{d}
+> $$
+>
+> has nonnegative entries and is the unique solution of
+>
+> $$
+> \mathbf{x} = C\mathbf{x} + \mathbf{d}
+> $$
+
+## 2.7 Applications to Computer Graphics
+
+**Homogeneous 3D Coordinates**
+
+By analogy with the 2D case, we say that $(x, y, z, 1)$ are homogeneous coordinates for the point $(x, y, z)$ in $\Bbb{R}^3$. In general, $(X, Y, Z, H)$ are **homogeneous coordinates** for $(x, y, z)$ if $H \neq 0$ and
+
+$$
+x = \frac X H, \quad y = \frac Y H, \quad \text{and} \quad z = \frac Z H
+$$
+
+Each nonzero scalar multiple of $(x, y, z, 1)$ gives a set of homogeneous coordinates for $(x, y, z)$.
 
 ## 3 Determinants
 
