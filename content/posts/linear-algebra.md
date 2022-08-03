@@ -64,8 +64,7 @@ date: 2022-08-03
 > If $A$ is an $m \times n$ matrix, with columns $\mathbf{a}_1,\dotsc,\mathbf{a}_n$, and if $\mathbf{x}$ is in $\Bbb{R}^n$, then the **product of $A$ and $\mathbf{x}$**, denoted by $A\mathbf{x}$, is **the linear combination of the columns of $A$ using the corresponding entries in $\mathbf{x}$ as weights**; that is,
 >
 > $$
-> A\mathbf{x}
-> =
+> A\mathbf{x} =
 > \begin{bmatrix}
 > \mathbf{a}_1 & \mathbf{a}_2 & \cdots & \mathbf{a}_n
 > \end{bmatrix}
@@ -74,13 +73,12 @@ date: 2022-08-03
 > \vdots \\
 > x_n \\
 > \end{bmatrix}
-> =
-> x_1\mathbf{a}_1 + x_2\mathbf{a}_2 + \dotsb + x_n\mathbf{a}_n
+> = x_1\mathbf{a}_1 + x_2\mathbf{a}_2 + \dotsb + x_n\mathbf{a}_n
 > $$
 
 > THEOREM 3 (p36) 
 >
-> If $A$ is an $m \times n* matrix, with columns $\mathbf{a}_1,\dotsc,\mathbf{a}_n$, and if $\mathbf{b}$ is in $\Bbb{R}^m$, the matrix equation
+> If $A$ is an $m \times n$ matrix, with columns $\mathbf{a}_1,\dotsc,\mathbf{a}_n$, and if $\mathbf{b}$ is in $\Bbb{R}^m$, the matrix equation
 >
 > $$
 > A\mathbf{x} = \mathbf{b}
@@ -146,11 +144,15 @@ date: 2022-08-03
 >
 > **Characterization of Linearly Dependent Sets**
 >
-> An indexed set $S = \{ \mathbf{v}_1,\dotsc,\mathbf{v}_p \}$ of two or more vectors is linearly dependent if and only if at least one of the vectors in $S$ is a linear combination of the others. In fact, if $S$ is linearly dependent and $\mathbf{v}_1 \neq \mathbf{0}$, then some $\mathbf{v}_j$ (with $j > 1$) is a linear combination of the preceding vectors, $\mathbf{v}_1,\dotsc,\mathbf{v}_{j-1}$.
+> An indexed set $S = \{ \mathbf{v}_1,\dotsc,\mathbf{v}_p \}$ of two or more vectors is linearly dependent if and only if at least one of the vectors in $S$ is a linear combination of the others. In fact, if $S$ is linearly dependent and $\mathbf{v}_1 \neq \mathbf{0}$, then some $\mathbf{v}_j$ (with $j > 1$) is a linear combination of the preceding vectors, $\mathbf{v} _ 1,\dotsc,\mathbf{v} _ {j-1}$.
 
 > THEOREM 8 (p60)
 >
 > If a set contains more vectors than there are entries in each vector, then the set is linearly dependent. That is, any set $\{ \mathbf{v}_1,\dotsc,\mathbf{v}_p \}$ in $\Bbb{R}^n$ is linearly dependent if $p > n$.
+
+> THEOREM 9 (p60)
+>
+> If a set $S = \{ \mathbf{v}_1,\dotsc,\mathbf{v}_p \}$ in $\Bbb{R}^n$ contains the zero vector, then the set is linearly dependent.
 
 ### 1.8 Introduction To Linear Transformations
 
@@ -235,13 +237,11 @@ date: 2022-08-03
 > If $A$ is an $m \times n$ matrix, and if $B$ is an $n \times p$ matrix with columns $\mathbf{b}_1,\dotsc,\mathbf{b}_p$, then the product $AB$ is the $m \times p$ matrix whose columns are $A\mathbf{b}_1,\dotsc,A\mathbf{b}_p$. That is,
 >
 > $$
-> AB =
-> A
+> AB = A
 > \begin{bmatrix}
 > \mathbf{b}_1 & \mathbf{b}_2 & \cdots & \mathbf{b}_p
 > \end{bmatrix}
-> =
-> \begin{bmatrix}
+> = \begin{bmatrix}
 > A\mathbf{b}_1 & A\mathbf{b}_2 & \cdots & A\mathbf{b}_p
 > \end{bmatrix}
 > $$
@@ -285,6 +285,7 @@ date: 2022-08-03
 > -c & a
 > \end{bmatrix}
 > $$
+>
 > If  $ad - bc = 0$, then $A$ is not invertible.
 
 > $$
@@ -424,12 +425,6 @@ $$
 Each nonzero scalar multiple of $(x, y, z, 1)$ gives a set of homogeneous coordinates for $(x, y, z)$.
 
 ## 3 Determinants
-
-### 3.1 Introduction to Determinants
-
-> THEOREM 9 (p60)
->
-> If a set $S = \{ \mathbf{v}_1,\dotsc,\mathbf{v}_p \}$ in $\Bbb{R}^n$ contains the zero vector, then the set is linearly dependent.
 
 ### 3.1 Introduction to Determinants
 
