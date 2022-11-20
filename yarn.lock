@@ -1798,15 +1798,15 @@
     "@emotion/styled" "^10.0.0"
     "@mdx-js/react" "^1.0.0"
 
-"@theme-ui/preset-deep@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@theme-ui/preset-deep/-/preset-deep-0.3.0.tgz#acdf3028ef8dc5af2d20b5a82f9fed1062cf74d6"
-  integrity sha512-5XZckaa1nhm7afb57bCMGKR/TCaf9cjTwhNkfAaFjKVklVB4CCinS43zQ0sDadwd3oihCJmGbXyvgwBb8mp/iw==
+"@theme-ui/preset-deep@^0.15.0":
+  version "0.15.4"
+  resolved "https://registry.yarnpkg.com/@theme-ui/preset-deep/-/preset-deep-0.15.4.tgz#6521f02906f7ea6a81ad7825525f1555e8921f92"
+  integrity sha512-XpMfKAfeOCDxAzRPjfXgIO/NGv2cI3doBnNtxXe89cZ1J7Vz0UmcMlkKHSn2fyQ+IYHiDktybQ+3M6x2vGU7uA==
 
-"@theme-ui/preset-swiss@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@theme-ui/preset-swiss/-/preset-swiss-0.3.0.tgz#ea170bc6e29d92a2e5b6e4cf90a17c68ca6f38f9"
-  integrity sha512-ijH0FPHMR9tT7ZOIV73lY4VHEvah2FftwrYUt7w4UhjId8SnKBp5GitU+IG4E5mRdP8IiPRQCBrfs9IuSFxnWA==
+"@theme-ui/preset-swiss@^0.15.0":
+  version "0.15.4"
+  resolved "https://registry.yarnpkg.com/@theme-ui/preset-swiss/-/preset-swiss-0.15.4.tgz#b8d52e2adfcb886716b4b6d6b6c24a33a35b58eb"
+  integrity sha512-083rCre7idT4lW2zP3P0RlkjcLa8nL9qz8GZ17+cVNCq5SPtcHnIl3S7ktr6+B+twM9iNi/2Qb3lklCIAPsO8w==
 
 "@theme-ui/prism@0.4.0-alpha.3":
   version "0.4.0-alpha.3"
