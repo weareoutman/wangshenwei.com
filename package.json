@@ -18,17 +18,17 @@
   "dependencies": {
     "@theme-ui/preset-deep": "^0.3.0",
     "@theme-ui/preset-swiss": "^0.3.0",
-    "gatsby": "^2.24.10",
-    "gatsby-plugin-google-analytics": "^2.3.13",
-    "gatsby-plugin-manifest": "^2.4.20",
-    "gatsby-plugin-nprogress": "^2.3.10",
+    "gatsby": "^5.0.0",
+    "gatsby-plugin-google-analytics": "^5.0.0",
+    "gatsby-plugin-manifest": "^5.0.0",
+    "gatsby-plugin-nprogress": "^5.0.0",
     "gatsby-theme-blog": "^2.0.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1"
   },
   "devDependencies": {
     "cypress": "^6.0.0",
-    "gatsby-cypress": "^0.9.0",
+    "gatsby-cypress": "^3.0.0",
     "sharp": "^0.26.0",
     "start-server-and-test": "^1.11.7"
   }
