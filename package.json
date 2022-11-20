@@ -23,8 +23,8 @@
     "gatsby-plugin-manifest": "^2.4.20",
     "gatsby-plugin-nprogress": "^2.3.10",
     "gatsby-theme-blog": "^2.0.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0"
   },
   "devDependencies": {
     "cypress": "^6.0.0",
