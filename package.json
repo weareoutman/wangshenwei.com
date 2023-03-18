@@ -30,6 +30,6 @@
     "cypress": "^6.0.0",
     "gatsby-cypress": "^0.9.0",
     "sharp": "^0.26.0",
-    "start-server-and-test": "^1.11.7"
+    "start-server-and-test": "^2.0.0"
   }
 }
