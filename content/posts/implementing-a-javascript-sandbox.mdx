@@ -1,6 +1,6 @@
 ---
 title: 实现一个 JavaScript Sandbox
-date: 2024-07-01
+date: 2024-07-06
 ---
 
 在某些项目中，特别是低代码平台、在线代码编辑器等，我们往往需要提供一个沙盒环境，让用户可以自行编写并运行 JavaScript 代码。这个沙盒需要提供一些平台内置 API 的访问，同时还需要限制用户代码的访问权限，以防止用户恶意操作。
@@ -47,15 +47,10 @@ date: 2024-07-01
 对于编程语言，词法分析将源代码分解为 tokens，语法分析将 tokens 组合成抽象语法树（Abstract Syntax Tree）。根据语义分析阶段的不同，可以将编程语言的实现分为解释型和编译型。它们的区别是，在得到抽象语法树后，解释型语言直接遍历并执行抽象语法树，而编译型语言将抽象语法树转换为机器码后再执行。
 
 ```
-Source Code     Tokens     Abstract Syntax Tree     Behavior
-           ↘   ↗      ↘   ↗                    ↘   ↗
-           Lexer      Parser                 Interpreter
-```
-
-```
-Source Code     Tokens     Abstract Syntax Tree     Machine Code
-           ↘   ↗      ↘   ↗                    ↘   ↗
-           Lexer      Parser                 Compiler
+Source ──> Tokens ───> AST ───> Behavior
+    (Lexer)    (Parser) │ (Interpreter)
+                        │
+             (Compiler) └─ ───> Machine Code
 ```
 
 编译型语言的优势在于执行效率高，因为编译优化后得到的是机器码可以直接交给 CPU 执行；而解释型语言的优势在于开发效率高，同时可以支持运行时动态代码执行，因为它不需要额外的编译过程。通常支持 [`eval()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval) 方法的编程语言都是解释型语言，例如 JavaScript / Python / PHP。
