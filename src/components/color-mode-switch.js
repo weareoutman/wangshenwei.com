@@ -1,5 +1,4 @@
 /** @jsx jsx */
-import { useEffect } from "react"
 import { jsx, css, useColorMode, Styled } from "theme-ui"
 
 function ColorModeSwitch() {
@@ -7,10 +6,6 @@ function ColorModeSwitch() {
   const toggleColorMode = () => {
     setColorMode(mode => mode === `dark` ? `light` : `dark`)
   }
-
-  useEffect(() => {
-    document.documentElement.dataset.theme = colorMode === "dark" ? "dark" : "light"
-  }, [colorMode])
 
   return (
     <Styled.a
