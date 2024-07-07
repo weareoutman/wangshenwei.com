@@ -1,9 +1,11 @@
 /** @jsx jsx */
+import React from "react"
 import { Link } from "gatsby"
+import Helmet from "react-helmet"
 import { jsx, css, Styled } from "theme-ui"
 import Bio from "gatsby-theme-blog/src/components/bio"
 import { SkipNavLink } from "@reach/skip-nav"
-import ColorModeSwitch from "../../components/color-mode-switch";
+import ColorModeSwitch from "../../components/color-mode-switch"
 
 const rootPath = `${__PATH_PREFIX__}/`
 
@@ -55,6 +57,9 @@ const Title = ({ children, location }) => {
 
 const Header = ({ children, title, ...props }) => (
   <header>
+    <Helmet>
+      <meta property="og:image" content="https://www.wangshenwei.com/static/2b467d8e9e1c0d3a8662ef8c8a223a18/88b72/avatar.png" />
+    </Helmet>
     <SkipNavLink sx={{ variant: `styles.a` }} />
     <div
       css={css({
