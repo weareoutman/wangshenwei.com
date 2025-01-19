@@ -1,4 +1,5 @@
 // @ts-check
+
 /** @type {import("plain-blog").SiteConfig} */
 export default {
   site: {
