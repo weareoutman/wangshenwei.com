@@ -1,35 +1,28 @@
 {
   "name": "wangshenwei.com",
   "private": true,
-  "version": "0.0.1",
+  "type": "module",
   "scripts": {
-    "develop": "gatsby develop",
-    "start": "gatsby develop",
-    "build": "gatsby build",
-    "build:e2e": "CYPRESS_SUPPORT=y gatsby build",
-    "serve": "gatsby serve",
-    "clean": "gatsby clean",
-    "test": "echo 'nothing to test'",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run",
-    "cypress:run:ci": "cypress run --record",
-    "test:e2e:ci": "start-server-and-test serve http://localhost:9000 cypress:run:ci"
-  },
-  "dependencies": {
-    "@theme-ui/preset-deep": "^0.3.0",
-    "@theme-ui/preset-swiss": "^0.3.0",
-    "gatsby": "^2.24.10",
-    "gatsby-plugin-google-analytics": "^2.3.13",
-    "gatsby-plugin-manifest": "^2.4.20",
-    "gatsby-plugin-nprogress": "^2.3.10",
-    "gatsby-theme-blog": "^2.0.1",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1"
+    "build": "plain-blog",
+    "watch": "node --watch node_modules/.bin/plain-blog"
   },
   "devDependencies": {
-    "cypress": "^6.0.0",
-    "gatsby-cypress": "^0.9.0",
-    "sharp": "^0.26.0",
-    "start-server-and-test": "^1.11.7"
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.26.3",
+    "@mdx-js/node-loader": "^3.1.0",
+    "hast-util-to-string": "^3.0.1",
+    "js-yaml": "^4.1.0",
+    "prism-themes": "^1.9.0",
+    "prismjs": "^1.29.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "refractor": "^4.8.1",
+    "remark-frontmatter": "^5.0.0",
+    "remark-rehype": "^11.1.1",
+    "unist-util-visit": "^5.0.0"
+  },
+  "dependencies": {
+    "plain-blog": "^0.1.0"
   }
 }
