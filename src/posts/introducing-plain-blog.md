@@ -3,7 +3,7 @@ title: Introducing Plain Blog
 date: 2025-01-19
 ---
 
-[The plain blog builder](https://weareoutman.github.io/plain-blog/) which emits zero client-side JavaScript. With minimal configuration, your blog will be fast and elegant.
+[The plain blog builder](https://weareoutman.github.io/plain-blog/) (https://github.com/weareoutman/plain-blog) which emits zero client-side JavaScript. With minimal configuration, your blog will be fast and elegant.
 
 It's fast, both at run time and build time. For [my own personal blog](https://www.wangshenwei.com/), which includes a dozen of articles and about 50 images, it builds in less than 1 second.
 
