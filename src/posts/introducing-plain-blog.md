@@ -3,11 +3,11 @@ title: Introducing Plain Blog
 date: 2025-01-19
 ---
 
-[The plain blog builder](https://weareoutman.github.io/plain-blog/) which emits zero client side JavaScript. With minimal configure, your blog will be fast and elegant.
+[The plain blog builder](https://weareoutman.github.io/plain-blog/) which emits zero client-side JavaScript. With minimal configuration, your blog will be fast and elegant.
 
-It's fast, both at run time and build time. For [my own person blog](https://www.wangshenwei.com/), which includes a dozen of articles and about 50 images, it builds in less than 1 seconds.
+It's fast, both at run time and build time. For [my own personal blog](https://www.wangshenwei.com/), which includes a dozen of articles and about 50 images, it builds in less than 1 second.
 
-Under the hood, it uses the Node.js native [module hooks](https://nodejs.org/docs/latest-v22.x/api/module.html#customization-hooks), as known as *node loaders*, to build all the pages. With module hooks, the Node.js can import files other than js, such as jsx/md/css/png, actually any files including http resources. So there are no any pack tools nor pack mechanisms involved, just several transformer tools like [MDX](https://mdxjs.com/) which supports markdown mixed with React, and [SWC](https://swc.rs/) which transforms jsx code, and [PostCSS](https://postcss.org/) which let you use tomorrow's CSS today.
+Under the hood, it uses the Node.js native [module hooks](https://nodejs.org/docs/latest-v22.x/api/module.html#customization-hooks), as known as *node loaders*, to build all the pages. With module hooks, Node.js can import files other than js, such as jsx/md/css/png, actually any files including http resources. So there are no any pack tools nor pack mechanisms involved, just several transformer tools like [MDX](https://mdxjs.com/) which supports markdown mixed with React, and [SWC](https://swc.rs/) which transforms jsx code, and [PostCSS](https://postcss.org/) which let you use tomorrow's CSS today.
 
 And because it uses native imports, we can use `node --watch` for development, so no watch tools nor extra confitures is needed.
 
@@ -21,7 +21,7 @@ Actually, you can include some `<script>` tags in your customized components, wh
 
 ## When should I NOT use it
 
-You want to build a rich client side website, which needs lots of interactions that can only be implemented by JavaScript.
+You want to build a rich client-side website, which needs lots of interactions that can only be implemented by JavaScript.
 
 ## Usage
 
@@ -76,7 +76,7 @@ Wit a little more work, it can look nicer, just like [my personal blog](https://
 
 - [x] MDX pages
 - [x] JSX pages
-- [x] Zero client side JavaScript
+- [x] Zero client-side JavaScript
 - [x] SEO optimized
 - [x] Auto generated index page that lists all posts
 - [x] Custom css
