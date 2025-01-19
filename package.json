@@ -13,6 +13,7 @@
     "@mdx-js/node-loader": "^3.1.0",
     "hast-util-to-string": "^3.0.1",
     "js-yaml": "^4.1.0",
+    "plain-blog": "^0.1.1",
     "prism-themes": "^1.9.0",
     "prismjs": "^1.29.0",
     "react": "^19.0.0",
@@ -21,8 +22,5 @@
     "remark-frontmatter": "^5.0.0",
     "remark-rehype": "^11.1.1",
     "unist-util-visit": "^5.0.0"
-  },
-  "dependencies": {
-    "plain-blog": "^0.1.0"
   }
 }
