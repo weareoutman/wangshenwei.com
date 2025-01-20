@@ -66,7 +66,7 @@ Then run `npm install && npm run build`.
 
 And your site has been built. Serve the `dist` folder with any static server, such as by running `python3 -m http.server --directory dist`.
 
-The index page may have only a header and footer by now, try adding some markdown files in `posts`, and run `run run build` again.
+The index page may have only a header and footer by now, try adding some markdown files in `posts`, and run `npm run build` again.
 
 In most case, you need some custom css, as well as other configs to improve your blog. Add a config file named `plain.config.js` in your project root:
 
