@@ -6,10 +6,7 @@ export default {
     title: "WeAreOutMan",
     description: "Personal blog of Shenwei Wang",
     url: "https://www.wangshenwei.com",
-    favicon: "src/assets/avatar.png",
-  },
-  posts: {
-    path: "src/posts",
+    favicon: "assets/avatar.png",
   },
   components: {
     Article: "src/components/Article.jsx",

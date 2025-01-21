@@ -7,7 +7,7 @@
     "watch": "node --watch node_modules/.bin/plain-blog"
   },
   "devDependencies": {
-    "plain-blog": "^0.3.0",
+    "plain-blog": "^0.4.0",
     "prism-themes": "^1.9.0",
     "react": "^19.0.0"
   }

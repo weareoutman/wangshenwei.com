@@ -3,7 +3,7 @@ title: Introducing Plain Blog
 date: 2025-01-19
 ---
 
-[The Plain Blog builder](https://weareoutman.github.io/plain-blog/) which emits zero client-side JavaScript. With minimal configuration, your blog will be fast and elegant.
+[The Plain Blog builder](https://github.com/weareoutman/plain-blog) which emits zero client-side JavaScript. With minimal configuration, your blog will be fast and elegant.
 
 Although it emits no JavaScript to the the client-side, you can composite your page layout using React components, writing content in markdown or MDX. So blogs built with similar tech like [Gatsby](https://www.gatsbyjs.com/) can migrate to Plain Blog with little effort.
 
@@ -37,7 +37,7 @@ By default, the Plain Blog recognize the following file structure by default:
 
 ```text
 your-blog
-├── posts
+├── content
 │   ├── hello-world.md
 │   ├── my-article.mdx
 │   └── my-page.jsx
@@ -47,7 +47,9 @@ your-blog
 └── package.json
 ```
 
-First, create `package.json`:
+For md/mdx/jsx files in content, they will be compiled to html files. For example `content/hello-world.md` will compiled to `dist/hello-world/index.html`, so you can visit `/hello-world/` from your website. For other files in content not starting with a dot, will be copied as it is.
+
+If you choose to build it from scratch, first create `package.json`:
 
 ```json
 {
@@ -57,16 +59,15 @@ First, create `package.json`:
     "watch": "node --watch node_modules/.bin/plain-blog"
   },
   "devDependencies": {
-    "plain-blog": "^0.1.1"
+    "plain-blog": ">=0.4.0",
+    "serve": "^14.2.4"
   }
 }
 ```
 
-Then run `npm install && npm run build`.
+Then run `npm install && npm run build`. And your site has been built, run `npm run serve`, or serve the `dist` folder with any static server.
 
-And your site has been built. Serve the `dist` folder with any static server, such as by running `python3 -m http.server --directory dist`.
-
-The index page may have only a header and footer by now, try adding some markdown files in `posts`, and run `npm run build` again.
+The index page may have only a header and footer by now, try adding some markdown files in `content`, and run `npm run build` again.
 
 In most case, you need some custom css, as well as other configs to improve your blog. Add a config file named `plain.config.js` in your project root:
 
@@ -103,15 +104,15 @@ With a little more work, such as [customizing components](https://github.com/wea
 - [x] JSX pages
 - [x] Zero client-side JavaScript
 - [x] SEO optimized
-- [x] Auto generated index page that lists all posts
+- [x] Auto generated index page that lists all articles
 - [x] Custom css
 - [x] Custom page components
 - [x] Prism code blocks
 - [x] Custom base url
+- [x] Nested folders in content
 - [x] Images (image mark in MD, imports in MD/JS)
 - [x] Images optimized (auto resized to no more than 1400px wide, by default)
 - [ ] Images of `url()` in css
-- [ ] Nested folders of posts structure
 - [ ] Social image by article
 - [ ] TypeScript (wait for [Deno to support module hooks](https://github.com/denoland/deno/issues/23201))
 

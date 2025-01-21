@@ -8,22 +8,22 @@ import dateFormatter from "./date-formatter.js";
  * @param {import("plain-blog").HomeProps} props
  * @returns {import("react").JSX.Element}
  */
-export default function Home({ posts }) {
+export default function Home({ articles }) {
   const { site, meta } = useSiteContext();
 
   return (
     <Page title={site.title} meta={meta}>
       <Header type="home" />
       <main className="home">
-        {posts.map((post, index) => (
+        {articles.map((article, index) => (
           <section key={index}>
             <h2>
-              <a href={post.url}>{post.title}</a>
+              <a href={article.url}>{article.title}</a>
             </h2>
-            {post.date && <p className="post-date">{dateFormatter.format(new Date(post.date))}</p>}
-            {post.summary && (
+            {article.date && <p className="post-date">{dateFormatter.format(new Date(article.date))}</p>}
+            {article.summary && (
               <article>
-                <p>{post.summary}</p>
+                <p>{article.summary}</p>
               </article>
             )}
           </section>
