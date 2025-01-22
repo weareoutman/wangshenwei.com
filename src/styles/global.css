@@ -133,6 +133,7 @@ article > blockquote > p {
   margin-bottom: 32px;
 }
 
+article > p > a > img,
 article > p > img {
   display: block;
   max-width: 100%;
