@@ -13,7 +13,6 @@ export default {
     Home: "src/components/Home.jsx",
   },
   styles: [
-    "~prism-themes/themes/prism-vsc-dark-plus.css",
     "src/styles/global.css",
   ],
 }

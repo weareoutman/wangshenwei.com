@@ -179,22 +179,15 @@ article p.post-date {
   margin-bottom: 16px;
 }
 
-pre[class*="language-"] {
+.shiki {
   margin-left: -16px;
   margin-right: -16px;
   padding: 16px;
-}
-
-pre[class*="language-"],
-code[class*="language-"] {
-  color: #9cdcfe;
   font-size: 14px;
   line-height: 1.75;
+  overflow-x: auto;
 }
 
-.token.builtin {
-	color: #569CD6;
-}
 p.figure-caption {
   text-align: center;
   opacity: 0.6;
@@ -236,7 +229,7 @@ a[role="button"] {
   box-shadow: 0 1px 0 0 currentColor;
 }
 
-@media screen and (min-width: 40em) {
+@media screen and (min-width: 704px) {
   h1 {
     font-size: 40px;
   }
@@ -255,7 +248,7 @@ a[role="button"] {
     line-height: 50px;
   }
 
-  pre[class*="language-"] {
+  .shiki {
     border-radius: 10px;
   }
 }
