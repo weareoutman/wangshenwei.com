@@ -1,11 +1,44 @@
+html {
+  --primary-color: hsl(10, 80%, 50%);
+  --text-color: hsl(10, 20%, 20%);
+  --muted-color: hsl(10, 20%, 93%);
+  --background-color: hsl(10, 10%, 98%);
+
+  color-scheme: light;
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  html:not([data-theme="light"]) {
+    --primary-color: rgb(242, 95, 92);
+    --text-color: hsl(210, 50%, 96%);
+    --muted-color: rgb(64, 71, 86);
+    --background-color: hsl(230, 25%, 18%);
+
+    color-scheme: dark;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+html[data-theme="dark"] {
+  --primary-color: rgb(242, 95, 92);
+  --text-color: hsl(210, 50%, 96%);
+  --muted-color: rgb(64, 71, 86);
+  --background-color: hsl(230, 25%, 18%);
+
+  color-scheme: dark;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 * {
   box-sizing: border-box;
 }
 
 body {
   font-family: 'Merriweather', 'Georgia', serif;
-  color: hsl(10, 20%, 20%);
-  background-color: hsl(10, 10%, 98%);
   line-height: 1.75;
   font-weight: 400;
   font-size: 16px;
@@ -31,7 +64,7 @@ h3 {
 }
 
 a {
-  color: hsl(10, 80%, 50%);
+  color: var(--primary-color);
   text-decoration: none;
   box-shadow: 0 1px 0 0 currentColor;
 }
@@ -49,10 +82,21 @@ a {
   padding-top: 24px;
 }
 
+.page-header:not(.home),
+.title-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.title-container {
+  margin-bottom: 32px;
+}
+
 .page-header > a {
   box-shadow: none;
   text-decoration: none;
-  color: hsl(10, 80%, 50%);
+  color: var(--primary-color);
   font-size: 24px;
   font-weight: 700;
   font-family: 'Montserrat', sans-serif;
@@ -64,8 +108,7 @@ a {
 }
 
 .page-header.home h1 {
-  margin-top: 0;
-  margin-bottom: 32px;
+  margin: 0;
   font-size: 24px;
 }
 
@@ -85,7 +128,7 @@ a {
 .page-footer > hr {
   border-width: 0 0 1px;
   border-style: solid;
-  border-color: hsl(10, 20%, 94%);
+  border-color: var(--muted-color);
 }
 
 .bio {
@@ -143,10 +186,13 @@ article > p > img {
 
 :not(pre) > code {
 	font-family: Menlo, Monaco, Consolas, "Andale Mono", "Ubuntu Mono", "Courier New", monospace;
-  color: hsl(10, 60%, 50%);
-  background-color: hsl(10, 20%, 94%);
-  padding-left: 3px;
-  padding-right: 3px;
+  background-color: var(--muted-color);
+  padding: .125em .25em .125em;
+  border-radius: 0.25em;
+}
+
+a > code {
+  padding-bottom: 0.05em;
 }
 
 article blockquote {
@@ -170,7 +216,7 @@ article th,
 article td {
   text-align: left;
   padding: 4px 4px 4px 0px;
-  border-color: hsl(10, 20%, 94%);
+  border-color: var(--muted-color);
   border-bottom-style: solid;
 }
 

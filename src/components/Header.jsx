@@ -9,12 +9,16 @@ export default function Header(props) {
     props.type === "home"
     ? (
       <header className="page-header home">
-        <h1><a href={baseUrl}>{site.title}</a></h1>
+        <div className="title-container">
+          <h1><a href={baseUrl}>{site.title}</a></h1>
+          <color-mode-switch />
+        </div>
         <Bio />
       </header>
     ) : (
       <header className="page-header">
         <a href={baseUrl}>{site.title}</a>
+        <color-mode-switch />
       </header>
     )
   );
