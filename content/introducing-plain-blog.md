@@ -78,7 +78,7 @@ export default {
   // Fill in with site metadata to improve SEO
   site: {
     title: "My Plain Blog",
-    description: "Personal blog of xxx",
+    description: "Personal blog by xxx",
     url: "https://example.com",
   },
   styles: [

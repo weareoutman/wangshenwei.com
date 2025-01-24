@@ -4,7 +4,7 @@
 export default {
   site: {
     title: "WeAreOutMan",
-    description: "Personal blog of Shenwei Wang",
+    description: "Personal blog by Shenwei Wang",
     url: "https://www.wangshenwei.com",
     favicon: "assets/avatar.png",
   },

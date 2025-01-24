@@ -5,7 +5,7 @@ export default function Bio() {
     <div className="bio">
       <img className="bio-avatar" src={avatar} />
       <div className="bio-content">
-        Personal blog of <a href="/">Shenwei Wang</a>.
+        Personal blog by <a href="/">Shenwei Wang</a>.
         <br />
         Writing code, raising kid, exploring the world.
       </div>
