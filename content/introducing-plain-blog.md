@@ -9,7 +9,7 @@ Although it emits no JavaScript to the the client-side, you can composite your p
 
 It's fast, both at run time and build time. For [my own personal blog](https://www.wangshenwei.com/), which includes a dozen of articles and about 50 images, it builds in less than 1 second on my Mac. While it was using Gatsby, it would take about 30 seconds for a cold build, and 10 seconds for a warm build.
 
-Under the hood, it uses the Node.js native [module hooks](https://nodejs.org/docs/latest-v22.x/api/module.html#customization-hooks), as known as *node loaders*, to build all the pages. With module hooks, Node.js can import files other than js, such as jsx/md/css/png, actually any specifiers including http resources. So there are no any pack tools nor pack mechanisms involved, just several transformer tools like [MDX](https://mdxjs.com/) which supports markdown mixed with React, and [SWC](https://swc.rs/) which transforms jsx code, and [PostCSS](https://postcss.org/) which let you use tomorrow's CSS today.
+Under the hood, it uses the Node.js native [module hooks](https://nodejs.org/docs/latest-v22.x/api/module.html#customization-hooks), as known as *node loaders*, to build all the pages. With module hooks, Node.js can import files other than js, such as jsx/md/css/png, actually any specifiers including http resources. So there are no pack tools involved (by default), just several transformer tools like [MDX](https://mdxjs.com/) which supports markdown mixed with React, and [SWC](https://swc.rs/) which transforms jsx code, and [PostCSS](https://postcss.org/) which let you use tomorrow's CSS today. If you opt-in specifies client-side scripts, it will use [esbuild](https://esbuild.github.io/) to bundle them.
 
 And because it uses native imports, we can use `node --watch` for development, so no watch tools nor extra configs are needed.
 
@@ -23,7 +23,7 @@ For beginners, try this template repo on Github: [https://github.com/weareoutman
 
 You want to build a website which serves static content only, includes a personal blog, a documentation site, etc.
 
-You can include some `<script>` tags in your customized components if you have to, which can use traditional DOM manipulation JavaScript to implement some simple interactions. But be aware of that [React hydration](https://react.dev/reference/react-dom/client/hydrateRoot) is not supported, and likely will not be.
+In case you do need some client-side JavaScript anyway, you can opt-in to inject specified JS files by configure `scripts` in `plain.config.js`, we recommend to use it only when necessary, and make them as small as possible. And be aware of that [React hydration](https://react.dev/reference/react-dom/client/hydrateRoot) is not supported, and likely will not be.
 
 ## When should I NOT use it
 
@@ -56,7 +56,9 @@ If you choose to build it from scratch, first create `package.json`:
   "type": "module",
   "scripts": {
     "build": "plain-blog",
-    "watch": "node --watch node_modules/.bin/plain-blog"
+    "dev": "NODE_ENV=development plain-blog",
+    "watch": "NODE_ENV=development node --watch ./node_modules/.bin/plain-blog",
+    "serve": "serve dist"
   },
   "devDependencies": {
     "plain-blog": ">=0.4.0",
@@ -67,7 +69,7 @@ If you choose to build it from scratch, first create `package.json`:
 
 Then run `npm install && npm run build`. And your site has been built, run `npm run serve`, or serve the `dist` folder with any static server.
 
-The index page may have only a header and footer by now, try adding some markdown files in `content`, and run `npm run build` again.
+The index page may have only a header and footer by now, try adding some markdown files in `articles`, and run `npm run build` again.
 
 In most case, you need some custom css, as well as other configs to improve your blog. Add a config file named `plain.config.js` in your project root:
 
@@ -97,10 +99,4 @@ export default {
 
 With a little more work, such as [customizing components](https://github.com/weareoutman/wangshenwei.com/blob/master/plain.config.js), it can look nicer, just like [my personal blog](https://www.wangshenwei.com/).
 
-## Features tracking
-
-https://plain-blog.js.org/features-tracking/
-
-## License
-
-MIT
+Read more: https://plain-blog.js.org/
