@@ -1,5 +1,4 @@
 import Bio from "./Bio.jsx";
-import ColorModeSwitchLoader from "./ColorModeSwitchLoader.jsx";
 
 export default function Footer(props) {
   return (
@@ -19,8 +18,6 @@ export default function Footer(props) {
           <Bio />
         </footer>
       )}
-      {/* Put things with client-side scripts at last */}
-      <ColorModeSwitchLoader />
     </>
   );
 }

@@ -5,10 +5,10 @@ export default function Page({
   meta,
   children
 }) {
-  const { stylesheets, site } = useSiteContext();
+  const { stylesheets, site, locales, scripts } = useSiteContext();
 
   return (
-    <html>
+    <html lang={title === "Introducing Plain Blog" ? "en-US" : locales?.[0]}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -22,6 +22,9 @@ export default function Page({
         <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&family=Montserrat:wght@700;900&display=swap" rel="stylesheet" />
         {stylesheets?.map((url) => (
           <link key={url} rel="stylesheet" href={url} />
+        ))}
+        {scripts?.map((url) => (
+          <script key={url} src={url} async />
         ))}
       </head>
       <body>

@@ -1,4 +1,7 @@
 // @ts-check
+import ColorModeCss from "./color-mode-switch.css";
+import MoonSvg from "./moon.svg";
+import SunSvg from "./sun.svg";
 
 if (CSS.supports("color-scheme", "dark")) {
   customElements.define("color-mode-switch", class ColorModeSwitchElement extends HTMLElement {
@@ -10,9 +13,7 @@ if (CSS.supports("color-scheme", "dark")) {
 
       const shadowRoot = this.attachShadow({mode: "open"});
 
-      /** @type {HTMLTemplateElement} */
-      const template = document.getElementById("tpl-color-mode-switch");
-      shadowRoot.appendChild(template.content.cloneNode(true));
+      shadowRoot.innerHTML = `<style>${ColorModeCss}</style><a role="button">${MoonSvg}${SunSvg}</a>`;
 
       this._switch = shadowRoot.querySelector("a");
       this._setTheme(localStorage.getItem("theme") || getPreferColorScheme());
