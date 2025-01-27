@@ -1,0 +1,124 @@
+<html lang="zh-Hans-CN"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/assets/a0736d0e7e8d470e.png"/><script src="/assets/EWFGSKOU.js" async=""></script><title>JavaScript 特性</title><meta name="title" content="JavaScript 特性"/><meta name="og:site_name" content="WeAreOutMan"/><meta name="og:title" content="JavaScript 特性"/><meta name="og:type" content="article"/><meta name="og:url" content="https://www.wangshenwei.com/javascript-features/"/><meta name="og:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:url" content="https://www.wangshenwei.com/javascript-features/"/><meta name="twitter:title" content="JavaScript 特性"/><meta name="twitter:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><link rel="icon" href="/assets/a0736d0e7e8d470e.png"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/><link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Montserrat:wght@700;900&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="/assets/main.caad21e9.css"/></head><body><header class="page-header"><a href="/">WeAreOutMan</a><color-mode-switch></color-mode-switch></header><main><article><h1>JavaScript 特性</h1><p class="post-date">March 21, 2014</p><p>动态和函数式编程，是 JavaScript 的几个基本特性之一。动态让语言更加灵活和自由，函数式编程则是 JavaScript 的主要编程风格。</p>
+<p>JavaScript 的另外几个重要特性，如作用域链与闭包、基于原型的面向对象等，将在其它文章中讨论。</p>
+<h3>动态</h3>
+<p>静态语言 vs 动态语言，就好比书面语 vs 口语，一个高端大气上档次，一个灵活自由接地气，各有用武之地，这里就不在编程语言之间掐架了。理解并熟练运用动态特性，可以让你在开发时更加高效。同时留意由此带来的潜在问题，可以避免你误入语言陷进。</p>
+<p>JavaScript 的动态特性主要表现在这几个方面：动态类型、eval、对象动态更新、反射。</p>
+<h4>动态类型</h4>
+<p>一个<em>变量</em>并没有绑定的<em>类型</em>，<em>类型</em>只与具体的<em>值</em>关联。</p>
+<p>这给 C、Java 等传统的强类型语言开发者以困惑，但对于PHP等开发者则又倍感亲切：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> foo</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">foo</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;A string&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">foo</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">foo</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">new</span><span style="color:#DCDCAA"> Date</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">foo</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">function</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#FFD700">{</span><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<h4>Eval</h4>
+<p>虽然 <code>eval</code> 不被推荐使用，但是它也一度被很多开发者视为瑰宝。</p>
+<p>在运行时， eval 可以将给定的字符串当作代码语句执行：</p>
+<pre><code class="language-php">&lt;script&gt;
+var func = &lt;?php echo json_encode($user_send[&#x27;func&#x27;]); ?&gt;;
+eval(func + &quot;()&quot;);
+function sayHello() {}
+function sayGoodbye() {}
+&lt;/script&gt;
+</code></pre>
+<p>在代码中用一组字符串与变量拼出另一串代码来运行，这看起来吊爆了。</p>
+<p>但请在使用 eval 之前考虑下它将带来的潜在问题：</p>
+<ol>
+<li>使用了 eval 的代码可阅读性很差，你读到这样的代码时很难判断它究竟要做啥，即使那是你自己几天前写的。</li>
+<li>JavaScript 解释器引擎难以对代码执行优化。解释器引擎的执行优化是建立在“<strong>明确的知道这个变量在运行时所指向的引用</strong>”的基础上。</li>
+<li>eval 中的字符串如果包含用户输入的数据，这会给攻击者有机可乘。</li>
+<li>如果你是有经验的开发者，大多数情况下你可以使用更高效的函数嵌套（闭包）等来解决问题；如果你没有足够的经验，那更不要使用 eval ，如果你不想你或你的用户遭受攻击。</li>
+</ol>
+<h4>对象动态更新</h4>
+<p>对象的属性和方法都可以在运行时，增加、修改、删除：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> obj</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    prop:</span><span style="color:#CE9178"> &quot;value&quot;</span></span>
+<span class="line"><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 增加方法</span></span>
+<span class="line"><span style="color:#9CDCFE">obj</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">other</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">function</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#FFD700">{</span><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 修改属性</span></span>
+<span class="line"><span style="color:#9CDCFE">obj</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">prop</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;new value&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 删除属性</span></span>
+<span class="line"><span style="color:#569CD6">delete</span><span style="color:#9CDCFE"> obj</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">prop</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<h4>反射</h4>
+<p>反射也是动态语言的重要特性之一：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> obj</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    foo:</span><span style="color:#CE9178"> &quot;value&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#DCDCAA">    bar</span><span style="color:#9CDCFE">:</span><span style="color:#569CD6"> function</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#569CD6"> this</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">foo</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 使用字符串访问对象的属性或方法</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">obj</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">foo</span><span style="color:#D4D4D4"> === </span><span style="color:#9CDCFE">obj</span><span style="color:#DA70D6">[</span><span style="color:#CE9178">&quot;foo&quot;</span><span style="color:#DA70D6">]</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 遍历对象的属性和方法</span></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">(</span><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> key</span><span style="color:#569CD6"> in</span><span style="color:#9CDCFE"> obj</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#6A9955">    // 使用 `hasOwnProperty` 可以避免遍历到由原型链继承而来的属性或方法</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">obj</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">hasOwnProperty</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">key</span><span style="color:#179FFF">)</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">        console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">key</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">obj</span><span style="color:#FFD700">[</span><span style="color:#9CDCFE">key</span><span style="color:#FFD700">]</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<h3>函数</h3>
+<blockquote>
+<p>Function is first-class in javascript.</p>
+</blockquote>
+<p>函数是 JavaScript 中的一等公民。怎么理解？简单说就是函数拥有至高的权利。</p>
+<p>看看 JavaScript 中的函数可以做哪些事：</p>
+<ul>
+<li>作为参数传递</li>
+<li>作为另一个函数的返回值</li>
+<li>赋值给一个变量</li>
+<li>作为对象的一个方法</li>
+</ul>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#DCDCAA"> bind</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">function</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">func</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">target</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#569CD6"> function</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">        func</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">apply</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">target</span><span style="color:#D4D4D4">, </span><span style="color:#569CD6">arguments</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> utils</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#DCDCAA">    trim</span><span style="color:#9CDCFE">:</span><span style="color:#569CD6"> function</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">str</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#9CDCFE"> str</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">replace</span><span style="color:#179FFF">(</span><span style="color:#D16969">/</span><span style="color:#DCDCAA">^</span><span style="color:#D16969">\s</span><span style="color:#D7BA7D">+</span><span style="color:#DCDCAA">|</span><span style="color:#D16969">\s</span><span style="color:#D7BA7D">+</span><span style="color:#DCDCAA">$</span><span style="color:#D16969">/</span><span style="color:#569CD6">g</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">&quot;&quot;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<h4>可变参数</h4>
+<ul>
+<li>函数的参数数量没有限制</li>
+<li>可以通过参数名或者 <code>arguments</code> 对象来访问参数</li>
+</ul>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#FFD700">(</span><span style="color:#569CD6">function</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#6A9955">    // `arguments` 拥有数组的外观，可以通过数字下标访问各个参数</span></span>
+<span class="line"><span style="color:#569CD6">    var</span><span style="color:#9CDCFE"> arg1</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">arguments</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">0</span><span style="color:#179FFF">]</span><span style="color:#D4D4D4">, </span><span style="color:#6A9955">// 1</span></span>
+<span class="line"><span style="color:#9CDCFE">        arg2</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">arguments</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">]</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 2</span></span>
+<span class="line"><span style="color:#6A9955">    // 但它并不是数组</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#179FFF">(</span><span style="color:#569CD6">arguments</span><span style="color:#569CD6"> instanceof</span><span style="color:#4EC9B0"> Array</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// false</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#179FFF">(</span><span style="color:#569CD6">arguments</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">slice</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// undefined</span></span>
+<span class="line"><span style="color:#6A9955">    // 对 `arguments` 进行数组相关操作</span></span>
+<span class="line"><span style="color:#569CD6">    var</span><span style="color:#9CDCFE"> argMore</span><span style="color:#D4D4D4"> = </span><span style="color:#4EC9B0">Array</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">prototype</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">slice</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">call</span><span style="color:#179FFF">(</span><span style="color:#569CD6">arguments</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">    console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">argMore</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// [3, 4]</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#FFD700">(</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<h4>作用域</h4>
+<p>先看看C语言中的<strong>块作用域</strong>(block scope)：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#9CDCFE">int</span><span style="color:#569CD6"> function</span><span style="color:#DCDCAA"> foo</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">void</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    int</span><span style="color:#9CDCFE"> bar</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">        int</span><span style="color:#9CDCFE"> bar</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> bar</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 1</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>而 JavaScript 中则有两种作用域：<strong>函数作用域</strong>和<strong>全局作用域</strong>。</p>
+<p>一个简单的函数作用域的例子：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> foo</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">    var</span><span style="color:#9CDCFE"> bar</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#569CD6">        var</span><span style="color:#9CDCFE"> bar</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> bar</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 2</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>全局作用域，对于浏览器来说可以理解为 <code>window</code> 对象（Node.js则是 <code>global</code>）：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> bar</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> foo</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#DCDCAA">alert</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">bar</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 1</span></span>
+<span class="line"><span style="color:#DCDCAA">alert</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">foo</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// &quot;function foo() {}&quot;</span></span></code></pre>
+<p>对于变量 <code>bar</code> 和函数 <code>foo</code> 都属于全局作用域，都是 <code>window</code> 对象的一个属性。</p>
+<p>作用域的嵌套将形成<strong>作用域链</strong>，函数的嵌套将形成<strong>闭包</strong>。</p>
+<p>作用域链与闭包是 JavaScript 的两个重要概念，理解并掌握这两点，是 JavaScript 开发者进阶之路的敲门砖。</p>
+<p>下一篇文章： <a href="/article/javascript-scopes-and-closures">JavaScript 作用域和闭包</a></p></article></main><footer class="page-footer"><hr/><div class="bio"><img class="bio-avatar" src="/assets/a0736d0e7e8d470e.png"/><div class="bio-content">Personal blog by <a href="/">Shenwei Wang</a>.<br/>Writing code, raising kid, exploring the world.</div></div></footer></body></html>

@@ -1,0 +1,214 @@
+<html lang="zh-Hans-CN"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/assets/a0736d0e7e8d470e.png"/><script src="/assets/EWFGSKOU.js" async=""></script><title>JavaScript 语法陷阱</title><meta name="title" content="JavaScript 语法陷阱"/><meta name="og:site_name" content="WeAreOutMan"/><meta name="og:title" content="JavaScript 语法陷阱"/><meta name="og:type" content="article"/><meta name="og:url" content="https://www.wangshenwei.com/javascript-syntax-trap/"/><meta name="og:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:url" content="https://www.wangshenwei.com/javascript-syntax-trap/"/><meta name="twitter:title" content="JavaScript 语法陷阱"/><meta name="twitter:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><link rel="icon" href="/assets/a0736d0e7e8d470e.png"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/><link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Montserrat:wght@700;900&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="/assets/main.caad21e9.css"/></head><body><header class="page-header"><a href="/">WeAreOutMan</a><color-mode-switch></color-mode-switch></header><main><article><h1>JavaScript 语法陷阱</h1><p class="post-date">March 26, 2014</p><blockquote>
+<p>码代码虽易，不出bug不易，且码且珍惜</p>
+</blockquote>
+<p>没有一门编程语言是完美的，JavaScript 也不例外，它语法陷阱重重，防不胜防：</p>
+<ul>
+<li>加号</li>
+<li>&quot;with&quot;</li>
+<li>分号自动插入</li>
+<li>声明提升</li>
+<li>&quot;eval&quot;</li>
+<li>多行字符串</li>
+<li>变量泄漏</li>
+<li>&quot;arguments.callee&quot;</li>
+<li>...</li>
+</ul>
+<p>了解和熟悉这些陷阱，并在开发时注意规避它们，可以给我们省去很多麻烦事。</p>
+<h3>加号</h3>
+<p>作为二元运算符时，<code>+</code> 既是数学运算的加法，也是字符串的拼接。另外，它还可以作为一元符号，表示正数。</p>
+<p>看看下面的代码：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// 1</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4">   </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> + </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">   </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 3</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#CE9178">&quot;3&quot;</span><span style="color:#D4D4D4"> + </span><span style="color:#CE9178">&quot;4&quot;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// &quot;34&quot;</span></span>
+<span class="line"><span style="color:#6A9955">// 2</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4">   </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> + </span><span style="color:#CE9178">&quot;3&quot;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// &quot;13&quot;</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#CE9178">&quot;3&quot;</span><span style="color:#D4D4D4"> + </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">   </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// &quot;31&quot;</span></span>
+<span class="line"><span style="color:#6A9955">// 3</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">null</span><span style="color:#D4D4D4">      </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">undefined</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">NaN</span><span style="color:#D4D4D4">       </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 4</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#CE9178">&quot;3&quot;</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">null</span><span style="color:#D4D4D4">      </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#CE9178">&quot;3&quot;</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">undefined</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#CE9178">&quot;3&quot;</span><span style="color:#D4D4D4"> + </span><span style="color:#569CD6">NaN</span><span style="color:#D4D4D4">       </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 5</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> + </span><span style="color:#DA70D6">{</span><span style="color:#DA70D6">}</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> + </span><span style="color:#DA70D6">[</span><span style="color:#DA70D6">]</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 6</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#CE9178">&quot;3&quot;</span><span style="color:#D4D4D4"> + </span><span style="color:#DA70D6">{</span><span style="color:#DA70D6">}</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#FFD700">(</span><span style="color:#D4D4D4"> </span><span style="color:#CE9178">&quot;3&quot;</span><span style="color:#D4D4D4"> + </span><span style="color:#DA70D6">[</span><span style="color:#DA70D6">]</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>也许你可以准确的说出第1组代码的结果，甚至第2组也能答上，但剩下的几组你能毫不犹豫地给出答案吗？</p>
+<p>在 JavaScript 中，是如何决定一段代码中的 <code>+</code> 是数学运算还是字符串拼接呢？答案请看下面这段逻辑：</p>
+<pre><code>a + b:
+    pa = ToPrimitive(a)
+    pb = ToPrimitive(b)
+    if (pa is string || pb is string)
+        return concat(ToString(pa), ToString(pb))
+    else
+        return add(ToNumber(pa), ToNumber(pb))
+</code></pre>
+<ol>
+<li>收集 <code>+</code> 两端的操作数的原始值。</li>
+<li>如果其中之一是字符串，则进行字符串拼接。</li>
+<li>否则，执行数学加法。</li>
+</ol>
+<p>需要注意的是，JavaScript 的原始值类型包括 number, string, boolean, undefined, 而 null 也是一种特殊的原始值。另一方面，对于非原始值类型（即复合类型，也即 object ）的变量，其原始值被认为是字符串。</p>
+<p>按这个逻辑，之前的测试结果就容易理解了。当然，像上面那样使用加号是不被推荐的，为了避免混淆，利用上面的加号逻辑，我们通常可以这样使用加号：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// 确保数字相加</span></span>
+<span class="line"><span style="color:#9CDCFE">a</span><span style="color:#D4D4D4"> = +</span><span style="color:#9CDCFE">b</span><span style="color:#D4D4D4"> + </span><span style="color:#FFD700">(</span><span style="color:#D4D4D4">+</span><span style="color:#9CDCFE">c</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 确保变量 d 为字符串</span></span>
+<span class="line"><span style="color:#9CDCFE">d</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;&quot;</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">d</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<h3>&quot;with&quot;</h3>
+<p>使用 <code>with</code> 语句，可以将一个语句块的上下文绑定为一个指定对象。</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">with</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">document</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#DCDCAA">    write</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;foo&quot;</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">    getElemntById</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;bar&quot;</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">innerHTML</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;foobar&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">    alert</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;Hello world!&quot;</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// 等同于以下代码</span></span>
+<span class="line"><span style="color:#9CDCFE">document</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">write</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;foo&quot;</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">document</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getElemntById</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;bar&quot;</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">innerHTML</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;foobar&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">alert</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;Hello world!&quot;</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>但是咱们不推荐使用 with ，事实上，ECMAScript 5 中引入的严格模式也禁止使用 with ：</p>
+<ol>
+<li>JavaScript 解释器引擎将难以对代码执行优化。解释器引擎的执行优化是建立在“明确的知道这个变量在运行时所指向的引用”的基础上的。而在 with 语句块中的变量或函数，在解释阶段无法判断其是属于 with 的上下文，还是其所在作用域，只有等到代码运行时才能确定。</li>
+<li>代码可阅读性差。</li>
+</ol>
+<h3>分号自动插入</h3>
+<p>在语句结束时，你不必手动输入分号，换行即可。</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> foo</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">    var</span><span style="color:#9CDCFE"> bar</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;value&quot;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> bar</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// `{}` 包围的语句块的最后一个语句的分号也可省略</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> bar</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span><span style="color:#D4D4D4"> </span><span style="color:#C586C0">return</span><span style="color:#CE9178"> &quot;foo&quot;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">}</span></span></code></pre>
+<p>开发者们每写一行代码，就可以少敲打一次键盘，这看起来很人性化。但过于依赖分号自动插入，会带来一些潜在问题。</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> foo</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">    return</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C8C8C8">        bar</span><span style="color:#D4D4D4">: </span><span style="color:#B5CEA8">1</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> bar</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">    var</span><span style="color:#9CDCFE"> a</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">b</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">c</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">d</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">e</span></span>
+<span class="line"><span style="color:#9CDCFE">    a</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">b</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">c</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">d</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">e</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toString</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>看看上面的代码，<code>foo()</code> 将返回什么？ <code>bar()</code> 又将怎么运行？</p>
+<p>事实上，前者将返回 <code>undefined</code> ，而后者的后两行代码将被理解为 <code>a = b + c(d + e).toString()</code> 。</p>
+<p>JavaScript 的分号自动插入的规则并不那么清晰可辨，老实地多敲几次键盘，可以避免那些让你摸不着头绪的bug在某一天突然出现。</p>
+<h3>声明提升</h3>
+<p>看看下面这段代码，我们将得到什么结果？</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> foo</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> bar</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#6A9955">    // 这个条件成立吗？</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#D4D4D4">! </span><span style="color:#9CDCFE">foo</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#569CD6">        var</span><span style="color:#9CDCFE"> foo</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">10</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#DCDCAA">    alert</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">foo</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#DCDCAA">bar</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>那么这段代码呢？</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> a</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> b</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    a</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">10</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    function</span><span style="color:#DCDCAA"> a</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#DCDCAA">b</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">alert</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">a</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>第1个例子，也许你会觉得是 &quot;1&quot; ，因为 <code>! 1</code> 为假，<code>if</code> 里的代码不会执行。而第2个例子，可能你认为应该是 &quot;10&quot; 。</p>
+<p>事实上，结果相反，我们将分别得到 &quot;10&quot; 和 &quot;1&quot; 。</p>
+<p>在 JavaScript 中，变量、函数的声明会被提升到当前函数主体的顶部，而不管这个声明语句是否出现在了不可到达的地方。</p>
+<p>上面的两段其实等同于：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> foo</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> bar</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">    var</span><span style="color:#9CDCFE"> foo</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#D4D4D4">! </span><span style="color:#9CDCFE">foo</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">        foo</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">10</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#DCDCAA">    alert</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">foo</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#DCDCAA">bar</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> a</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> b</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">    function</span><span style="color:#DCDCAA"> a</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#9CDCFE">    a</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">10</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#DCDCAA">b</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">alert</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">a</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>需要注意的是，只有变量或函数的声明被提升了，而赋值语句并没有。</p>
+<h3>&quot;eval&quot;</h3>
+<p><code>eval</code> 是 JavaScript 的动态特性之一，在运行时， eval 可以将给定的字符串当作代码语句执行：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#808080">&lt;</span><span style="color:#569CD6">script</span><span style="color:#808080">&gt;</span></span>
+<span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> func</span><span style="color:#D4D4D4"> = </span><span style="color:#D4D4D4">&lt;</span><span style="color:#D4D4D4">?</span><span style="color:#9CDCFE">php</span><span style="color:#9CDCFE"> echo</span><span style="color:#DCDCAA"> json_encode</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">$user_send</span><span style="color:#DA70D6">[</span><span style="color:#CE9178">&#x27;func&#x27;</span><span style="color:#DA70D6">]</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; ?</span><span style="color:#D4D4D4">&gt;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">eval</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">func</span><span style="color:#D4D4D4"> + </span><span style="color:#CE9178">&quot;()&quot;</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> sayHello</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> sayGoodbye</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#D4D4D4">&lt;</span><span style="color:#D4D4D4">/</span><span style="color:#9CDCFE">script</span><span style="color:#D4D4D4">&gt;</span></span></code></pre>
+<p>在代码中用一组字符串与变量拼出另一串代码来运行，这看起来吊爆了。</p>
+<p>但请在使用 eval 之前考虑下它将带来的潜在问题：</p>
+<ol>
+<li>使用了 eval 的代码可阅读性很差，你读到这样的代码时很难判断它究竟要做啥，即使那是你自己几天前写的。</li>
+<li>JavaScript 解释器引擎难以对代码执行优化。</li>
+<li>如果 eval 中的字符串包含用户输入的数据，这会给攻击者有机可乘。</li>
+<li>如果你是有经验的开发者，大多数情况下你可以使用更高效的函数嵌套（闭包）等来解决问题；如果你没有足够的经验，那更不要使用 eval ，如果你不想你或你的用户遭受攻击。</li>
+</ol>
+<h3>多行字符串</h3>
+<p>JavaScript 中不能直接书写多行的字符串，需要在行尾输入一个反斜杠 <code>\</code> 。</p>
+<p>假设我们的项目中有一段这样的代码：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">var</span><span style="color:#9CDCFE"> multiStr</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;this is a multi-line string, </span><span style="color:#D7BA7D">\</span></span>
+<span class="line"><span style="color:#CE9178">and this is the second line. </span><span style="color:#D7BA7D">\</span></span>
+<span class="line"><span style="color:#CE9178">yes, the string ends here&quot;</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>然后做了一些维护和更新：</p>
+<pre><code>var multiStr = &quot;this is a multi-line string, \
+and this is the second line. \ 
+now i want to insert a line right here, \
+yes, the string ends here&quot;;
+</code></pre>
+<p>凭肉眼似乎没看出毛病，但运行时却得到了一个语法错误，这之前你可能已经注意到语法高亮已经失效了。几经周折，你终于注意到了第2行行尾的那个不起眼的空格。。</p>
+<h3>变量泄漏</h3>
+<p>JavaScript 的全局作用域给了我们很多便利，有时我们无需使用 <code>var</code> 来声明变量。</p>
+<p>很多 JavaScript 的入门开发者，喜欢利用这个“便利”。但事实上它是一个陷阱。它很可能让我们的一些敲打错误被隐藏和掩盖。</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> foo</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">    var</span><span style="color:#9CDCFE"> type</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;first&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">something</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#6A9955">        // 这里假设我们手一抖，把type打成了typo</span></span>
+<span class="line"><span style="color:#9CDCFE">        typo</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;second&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> type</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>这段代码可以让项目长久地稳定运行，但随后的某天，我们吃惊地发现，所有的 type 都是 &quot;first&quot; ！在找到并修复这个手误之前，我们以此得到的数据或结论可能都要被废弃。</p>
+<p>直接使用没有声明的变量，将自动创建一个全局变量，滥用会导致全局变量污染，或者让类似上面这样的手误逍遥法外。合理的声明变量，并利用<a href="/article/javascript-scopes-and-closures">作用域链与闭包</a>，是 JavaScript 解决很多问题的思路。</p>
+<h3>&quot;arguments.callee&quot;</h3>
+<p>写一个递归函数，我们通常这样：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> factorial</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">n</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> </span><span style="color:#D4D4D4">&lt;</span><span style="color:#D4D4D4">= </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> ? </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> : </span><span style="color:#DCDCAA">factorial</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4"> - </span><span style="color:#B5CEA8">1</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> * </span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#FFD700">[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">5</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">map</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">factorial</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>有时我们不想污染命名空间，需要递归调用一个匿名函数，怎么办？</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#FFD700">[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">5</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">map</span><span style="color:#FFD700">(</span><span style="color:#569CD6">function</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">n</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> </span><span style="color:#D4D4D4">&lt;</span><span style="color:#D4D4D4">= </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> ? </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> : </span><span style="color:#6A9955">/* what goes here? */</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4"> - </span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4"> * </span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>还好我们有 <code>arguments.callee</code> ：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#FFD700">[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">5</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">map</span><span style="color:#FFD700">(</span><span style="color:#569CD6">function</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">n</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> </span><span style="color:#D4D4D4">&lt;</span><span style="color:#D4D4D4">= </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> ? </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> : </span><span style="color:#569CD6">arguments</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">callee</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4"> - </span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4"> * </span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>但是同样不推荐使用 arguments.callee ：</p>
+<ol>
+<li>访问 arguments.callee 的开销是昂贵的。</li>
+<li>使用它将导致 JavaScript 解释器难以执行优化。</li>
+<li>从 ECMAScript 3 开始，已经支持<strong>命名函数表达式</strong>。</li>
+</ol>
+<p>命名函数表达式：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#FFD700">[</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">3</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">4</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">5</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">map</span><span style="color:#FFD700">(</span><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> factorial</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">n</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> </span><span style="color:#D4D4D4">&lt;</span><span style="color:#D4D4D4">= </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> ? </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> : </span><span style="color:#DCDCAA">factorial</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4"> - </span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4"> * </span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>注意，这里的函数 <code>factorial()</code> 并不是函数声明，而是命名函数表达式，<code>factorial</code> 所处的作用域是其函数本身的作用域（与参数 <code>n</code> 属同一个作用域），而不是当前的全局作用域。但是，在 IE8 及以下浏览器中，情况则不同，它将属于全局作用域。</p>
+<h3>避开陷阱</h3>
+<p>JavaScript 有这么多的语法陷阱，如何规避，并保证我们的代码质量呢？后面再谈。</p></article></main><footer class="page-footer"><hr/><div class="bio"><img class="bio-avatar" src="/assets/a0736d0e7e8d470e.png"/><div class="bio-content">Personal blog by <a href="/">Shenwei Wang</a>.<br/>Writing code, raising kid, exploring the world.</div></div></footer></body></html>

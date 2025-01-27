@@ -1,0 +1,261 @@
+<html lang="zh-Hans-CN"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/assets/9c6e2ab36832e53f.jpg"/><link rel="preload" as="image" href="/assets/a0736d0e7e8d470e.png"/><script src="/assets/EWFGSKOU.js" async=""></script><title>实现一个 JavaScript Sandbox</title><meta name="title" content="实现一个 JavaScript Sandbox"/><meta name="og:site_name" content="WeAreOutMan"/><meta name="og:title" content="实现一个 JavaScript Sandbox"/><meta name="og:type" content="article"/><meta name="og:url" content="https://www.wangshenwei.com/implementing-a-javascript-sandbox/"/><meta name="og:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:url" content="https://www.wangshenwei.com/implementing-a-javascript-sandbox/"/><meta name="twitter:title" content="实现一个 JavaScript Sandbox"/><meta name="twitter:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><link rel="icon" href="/assets/a0736d0e7e8d470e.png"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/><link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Montserrat:wght@700;900&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="/assets/main.caad21e9.css"/></head><body><header class="page-header"><a href="/">WeAreOutMan</a><color-mode-switch></color-mode-switch></header><main><article><h1>实现一个 JavaScript Sandbox</h1><p class="post-date">July 06, 2024</p><p>在某些项目中，特别是低代码平台、在线代码编辑器等，我们往往需要提供一个沙盒环境，让用户可以自行编写并运行 JavaScript 代码。这个沙盒需要提供一些平台内置 API 的访问，同时还需要限制用户代码的访问权限，以防止用户恶意操作。</p>
+<p>如果不考虑安全性等因素，要在浏览器中使用 JavaScript 实现运行用户或者其他第三方编写的 JavaScript 代码并不难，只需要使用 <code>eval</code> 函数或者 <code>Function</code> 构造函数即可。但考虑下面的代码<sup><a href="https://github.com/nyariv/SandboxJS">[1]</a></sup>：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#FFD700">[</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">filter</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">constructor</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;alert(&#x27;jailbreak&#x27;)&quot;</span><span style="color:#FFD700">)</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span></span></code></pre>
+<p>这样的代码看上去人畜无害，没有直接访问任何全局对象，却可以让你的网页弹出一个恼人的对话框。事实上，攻击者可以只使用6种符号即可组合构造任意代码 <sup><a href="https://jsfuck.com/">[2]</a></sup>：<code>(</code>, <code>)</code>, <code>[</code>, <code>]</code>, <code>!</code> 和 <code>+</code>。</p>
+<p>因此我们有必要构造一个沙盒环境，根据业务需求，限制用户代码对特定对象的访问，防止恶意操作。</p>
+<p>既然是沙盒环境，我们还可以跳脱传统 JavaScript 的限制，扩展它的能力，例如：</p>
+<ul>
+<li>支持最新的 ECMAScript 特性</li>
+<li>支持 TypeScript</li>
+<li>免编译执行</li>
+</ul>
+<p>你没看错，我们可以在老旧浏览器中免编译执行包含最新特性的 JavaScript 甚至是 TypeScript。</p>
+<p>除此之外，基本的开发体验也是必不可少的，包括：</p>
+<ul>
+<li>单步/断点调试</li>
+<li>统计测试覆盖率</li>
+</ul>
+<p><a href="/assets/9c6e2ab36832e53f.jpg"><img src="/assets/9c6e2ab36832e53f.jpg" alt="Function debugging screenshot"/></a></p>
+<p class="figure-caption">优维低代码平台的函数调试界面</p>
+<h2>理论</h2>
+<p>要实现一个沙盒环境，在一定程度上等同于实现一门编程语言，当然我们这里不需要重现设计一门新的编程语言，只需关注实现。</p>
+<p>编程语言的实现一般包括三个阶段：</p>
+<ol>
+<li>词法分析（Lexical Analysis）</li>
+<li>语法分析（Syntax Analysis）</li>
+<li>语义分析（Semantic Analysis）</li>
+</ol>
+<p>其实这个过程也适用于自然语言。例如，当我们阅读一篇文章时：</p>
+<ol>
+<li>我们首先识别出一个个的词语及符号，这是词法分析；</li>
+<li>然后识别语法，例如主/谓/宾，并组成特定的句子，这是语法分析；</li>
+<li>最后理解文章整体表达的思想，这是语义分析。</li>
+</ol>
+<p>对于编程语言，词法分析将源代码分解为 tokens，语法分析将 tokens 组合成抽象语法树（Abstract Syntax Tree）。根据语义分析阶段的不同，可以将编程语言的实现分为解释型和编译型。它们的区别是，在得到抽象语法树后，解释型语言直接遍历并执行抽象语法树，而编译型语言将抽象语法树转换为机器码后再执行。</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span>Source ──&gt; Tokens ───&gt; AST ───&gt; Behavior</span></span>
+<span class="line"><span>    (Lexer)    (Parser) │ (Interpreter)</span></span>
+<span class="line"><span>                        │</span></span>
+<span class="line"><span>             (Compiler) └─ ───&gt; Machine Code</span></span></code></pre>
+<p>编译型语言的优势在于执行效率高，因为编译优化后得到的是机器码可以直接交给 CPU 执行；而解释型语言的优势在于开发效率高，同时可以支持运行时动态代码执行，因为它不需要额外的编译过程。通常支持 <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/eval"><code>eval()</code></a> 方法的编程语言都是解释型语言，例如 JavaScript / Python / PHP。</p>
+<p>现代浏览器的 JavaScript 引擎通常已经不是纯粹的解释器，例如 Google V8 采用了 JIT（<a href="https://zh.wikipedia.org/zh-cn/%E5%8D%B3%E6%97%B6%E7%BC%96%E8%AF%91">Just-In-Time</a>）编译器，它会在运行时阶段将解释执行的代码提前编译为<em>字节码</em>（注意它和<em>真编译型语言</em>转换的<em>机器码</em>有所不同）以提高执行效率。</p>
+<p>我们这里的场景只能选择使用解释器。</p>
+<h2>实现</h2>
+<p>现在我们开始动手编码，JavaScript 的词法和语法分析已经非常成熟，比如我们可以直接使用 <code>@babel/parser</code>：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">import</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span><span style="color:#D4D4D4"> </span><span style="color:#9CDCFE">parseExpression</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">}</span><span style="color:#D4D4D4"> </span><span style="color:#C586C0">from</span><span style="color:#CE9178"> &quot;@babel/parser&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> function</span><span style="color:#DCDCAA"> parse</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">source</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#6A9955">  // 为简单起见，这里只解析表达式</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#DCDCAA"> parseExpression</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">source</span><span style="color:#D4D4D4">, </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#6A9955">    // 使用 estree 格式的 AST https://github.com/estree/estree</span></span>
+<span class="line"><span style="color:#9CDCFE">    plugins:</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">[</span><span style="color:#CE9178">&quot;estree&quot;</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#179FFF">}</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>需要我们自己实现的主要是语义分析部分，即：如何遍历解释并执行抽象语法树。我们可以参考 <a href="https://tc39.es/ecma262/">ECMAScript 官方规范</a>来实现，先假设我们仅支持 <em>Literal</em> 节点（字符串、数字、布尔等），这非常简单：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> function</span><span style="color:#DCDCAA"> interpret</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">ast</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">  function</span><span style="color:#DCDCAA"> Evaluate</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">node</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">    switch</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">type</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#C586C0">      case</span><span style="color:#CE9178"> &quot;Literal&quot;</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#9CDCFE"> node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">      default</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#C586C0">        throw</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> TypeError</span><span style="color:#FFD700">(</span><span style="color:#CE9178">`Unsupported node type: </span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">type</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#179FFF">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#DCDCAA"> Evaluate</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">ast</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>这样我们就可以解释并执行一个简单的表达式了：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">interpret</span><span style="color:#FFD700">(</span><span style="color:#DCDCAA">parse</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;42&quot;</span><span style="color:#DA70D6">)</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 42</span></span></code></pre>
+<p>接来我们再支持下二元表达式 <em>BinaryExpression</em>：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">switch</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">type</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  case</span><span style="color:#CE9178"> &quot;BinaryExpression&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#6A9955">    // https://tc39.es/ecma262/#sec-evaluatestringornumericbinaryexpression</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> leftValue</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">Evaluate</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">left</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> rightValue</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">Evaluate</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">right</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> result</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">ApplyStringOrNumericBinaryOperator</span><span style="color:#179FFF">(</span></span>
+<span class="line"><span style="color:#9CDCFE">      leftValue</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">operator</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      rightValue</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#9CDCFE"> result</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#6A9955">  // case &quot;Literal&quot;:</span></span>
+<span class="line"><span style="color:#6A9955">  // ...</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> ApplyStringOrNumericBinaryOperator</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">leftValue</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">operator</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">rightValue</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  switch</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">operator</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">    case</span><span style="color:#CE9178"> &quot;+&quot;</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#C586C0">      return</span><span style="color:#9CDCFE"> leftValue</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">rightValue</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    case</span><span style="color:#CE9178"> &quot;-&quot;</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#C586C0">      return</span><span style="color:#9CDCFE"> leftValue</span><span style="color:#D4D4D4"> - </span><span style="color:#9CDCFE">rightValue</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    case</span><span style="color:#CE9178"> &quot;/&quot;</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#C586C0">      return</span><span style="color:#9CDCFE"> leftValue</span><span style="color:#D4D4D4"> / </span><span style="color:#9CDCFE">rightValue</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    case</span><span style="color:#CE9178"> &quot;*&quot;</span><span style="color:#D4D4D4">:</span></span>
+<span class="line"><span style="color:#C586C0">      return</span><span style="color:#9CDCFE"> leftValue</span><span style="color:#D4D4D4"> * </span><span style="color:#9CDCFE">rightValue</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#C586C0">  throw</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> TypeError</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">`Unsupported binary operator </span><span style="color:#D7BA7D">\`</span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">operator</span><span style="color:#569CD6">}</span><span style="color:#D7BA7D">\`</span><span style="color:#CE9178">`</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>现在我们已经可以进行四则运算了：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">interpret</span><span style="color:#FFD700">(</span><span style="color:#DCDCAA">parse</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;42 + 23&quot;</span><span style="color:#DA70D6">)</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 65</span></span>
+<span class="line"><span style="color:#DCDCAA">interpret</span><span style="color:#FFD700">(</span><span style="color:#DCDCAA">parse</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;(42 + 23) / 5&quot;</span><span style="color:#DA70D6">)</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 13</span></span></code></pre>
+<p>假设我们要为沙盒环境再提供一个内置 API <code>fibonacci(n)</code> 以获得第 n 个斐波那契数，为此我们需要支持 <em>CallExpression</em> 和 <em>Identifier</em>：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">switch</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">type</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  case</span><span style="color:#CE9178"> &quot;CallExpression&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#4FC1FF"> func</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">Evaluate</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">callee</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#DCDCAA"> EvaluateCall</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">func</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">arguments</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#C586C0">  case</span><span style="color:#CE9178"> &quot;Identifier&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#D4D4D4"> === </span><span style="color:#CE9178">&quot;fibonacci&quot;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#C586C0">      return</span><span style="color:#569CD6"> function</span><span style="color:#DCDCAA"> fibonacci</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">n</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#9CDCFE"> n</span><span style="color:#D4D4D4"> </span><span style="color:#D4D4D4">&lt;</span><span style="color:#D4D4D4">= </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> ? </span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4"> : </span><span style="color:#DCDCAA">fibonacci</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">-</span><span style="color:#B5CEA8">1</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> + </span><span style="color:#DCDCAA">fibonacci</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">n</span><span style="color:#D4D4D4">-</span><span style="color:#B5CEA8">2</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      </span><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#179FFF">}</span></span>
+<span class="line"><span style="color:#C586C0">    throw</span><span style="color:#569CD6"> new</span><span style="color:#DCDCAA"> TypeError</span><span style="color:#179FFF">(</span><span style="color:#CE9178">`Unknown identifier: </span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#569CD6">}</span><span style="color:#CE9178">`</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#6A9955">  // case &quot;BinaryExpression&quot;:</span></span>
+<span class="line"><span style="color:#6A9955">  // ...</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// https://tc39.es/ecma262/#sec-evaluatecall</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> EvaluateCall</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">func</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">args</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> argList</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">ArgumentListEvaluation</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">args</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> result</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">func</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">apply</span><span style="color:#DA70D6">(</span><span style="color:#569CD6">null</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">argList</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#9CDCFE"> result</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// https://tc39.es/ecma262/#sec-runtime-semantics-argumentlistevaluation</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> ArgumentListEvaluation</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">args</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> array</span><span style="color:#D4D4D4"> = </span><span style="color:#DA70D6">[</span><span style="color:#DA70D6">]</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">  for</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> arg</span><span style="color:#569CD6"> of</span><span style="color:#9CDCFE"> args</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    array</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">push</span><span style="color:#179FFF">(</span><span style="color:#DCDCAA">Evaluate</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">arg</span><span style="color:#FFD700">)</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#9CDCFE"> array</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>现在我们可以拿到指定的第 n 个斐波那契数：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#DCDCAA">interpret</span><span style="color:#FFD700">(</span><span style="color:#DCDCAA">parse</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;fibonacci((42 + 23) / 5)&quot;</span><span style="color:#DA70D6">)</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 233</span></span></code></pre>
+<p>继续遵循 <a href="https://tc39.es/ecma262/">ECMA-262</a> 语言规范，我们可以按照实际需求，选择性地逐步实现更多的语法能力，本文不再赘述。</p>
+<p>由于代码执行的每个环节都由我们控制，所以我们可以轻松地限制用户代码对特定对象的访问。</p>
+<h2>调试</h2>
+<p>前面提到，良好的开发体验也必不可少，其中最重要的首先是单步/断点调试。由于沙盒中代码的执行不再是浏览器直接执行的，因此无法使用浏览器的调试工具，需要我们自己实现。</p>
+<p>断点调试本质上是中断代码的执行，但 JavaScript 是单线程的，看上去我们无法在应用层将一个同步的代码变成异步、可中断的代码，但实际上可以找到解决办法。</p>
+<p>“中断代码的执行”正是<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/function*">生成器函数</a>做的事。日常开发中，很少有人会使用它，但它所支持的按需暂停和恢复执行的特性，恰好符合实现断点调试的需求。</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function*</span><span style="color:#DCDCAA"> test</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;Hello&quot;</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">  yield</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;World&quot;</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> gen</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">test</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">gen</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">next</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// hello</span></span>
+<span class="line"><span style="color:#9CDCFE">gen</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">next</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// world</span></span></code></pre>
+<p>同时，我们可以让代码在调试执行时，是异步、可中断的，而在正常执行时，依然是同步的。</p>
+<p>在我们的解释器中，可以先将源代码构造为一个包含 <code>yield</code> 断点的生成器中间函数，普通调用时，使用 <code>unwind</code> 同步展开生成的迭代器，因此该代码依然是同步执行的，而在调试模式下，直接返回生成的迭代器，这样就可以实现断点调试了：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function*</span><span style="color:#DCDCAA"> intermediate_fn</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  yield</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#B5CEA8"> 42</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> normal_fn</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#DCDCAA"> unwind</span><span style="color:#DA70D6">(</span><span style="color:#DCDCAA">intermediate_fn</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> debugger_fn</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#DCDCAA"> intermediate_fn</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> unwind</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">iterator</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  while</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#569CD6">true</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#569CD6">    const</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">{</span><span style="color:#D4D4D4"> </span><span style="color:#4FC1FF">done</span><span style="color:#D4D4D4">, </span><span style="color:#4FC1FF">value</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">}</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">iterator</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">next</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">    if</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">done</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#C586C0">      return</span><span style="color:#9CDCFE"> value</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#179FFF">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>改造后的解释器代码大概如下：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#C586C0">export</span><span style="color:#569CD6"> function</span><span style="color:#DCDCAA"> interpret</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">ast</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">  function*</span><span style="color:#DCDCAA"> Evaluate</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">node</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">    yield</span><span style="color:#D4D4D4">; </span><span style="color:#6A9955">// 断点</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">    switch</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">type</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#C586C0">      case</span><span style="color:#CE9178"> &quot;CallExpression&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#6A9955">        // 代理 Evaluate 遍历所生成的迭代器</span></span>
+<span class="line"><span style="color:#569CD6">        const</span><span style="color:#4FC1FF"> func</span><span style="color:#D4D4D4"> = </span><span style="color:#C586C0">yield</span><span style="color:#569CD6">*</span><span style="color:#DCDCAA"> Evaluate</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">callee</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">        return</span><span style="color:#C586C0"> yield</span><span style="color:#569CD6">*</span><span style="color:#DCDCAA"> EvaluateCall</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">func</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">node</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">arguments</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      </span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#6A9955">      // ...</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#179FFF">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#6A9955">  // ...</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>调试器的启动和步进的实现就很简单了：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">let</span><span style="color:#9CDCFE"> iterator</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#DCDCAA"> start</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">code</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  iterator</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">interpret</span><span style="color:#DA70D6">(</span><span style="color:#DCDCAA">parse</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">code</span><span style="color:#179FFF">)</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#DCDCAA"> step</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  iterator</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">next</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>当然，这只是一个简单的实现，实际上，调试器还需要支持更多的功能，包括查看当前执行的代码位置、变量值、标记断点等等，本文不再细述。</p>
+<h2>覆盖率</h2>
+<p>另外，统计测试覆盖率也是一个非常重要的开发体验，是提高代码质量的主要手段。测试覆盖率主要考虑三个维度：</p>
+<ul>
+<li>函数覆盖率：代码中的函数是否都被调用过？</li>
+<li>语句覆盖率：代码中的语句是否都被执行过？</li>
+<li>分支覆盖率：代码中的分支是否都被覆盖过？</li>
+</ul>
+<p>传统的测试覆盖率统计工具，通常是通过在代码中插入计数器，记录每个代码块被执行的次数，最后生成报告。它本质上是改变了实际执行的代码，例如被 Jest 等测试工具集成的 <a href="https://istanbul.js.org/">istanbul</a> ，在执行时会将以下源代码：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> test</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">input</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">input</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#569CD6"> true</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#9CDCFE"> input</span><span style="color:#D4D4D4"> ? </span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4"> : </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>转换为：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> test</span><span style="color:#FFD700">(</span></span>
+<span class="line"><span style="color:#9CDCFE">  input</span><span style="color:#D4D4D4"> = </span><span style="color:#DA70D6">(</span><span style="color:#DCDCAA">cov_159mw6va2c</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">b</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">0</span><span style="color:#179FFF">]</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">0</span><span style="color:#179FFF">]</span><span style="color:#D4D4D4">++, </span><span style="color:#B5CEA8">0</span><span style="color:#DA70D6">)</span></span>
+<span class="line"><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#DCDCAA">  cov_159mw6va2c</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">f</span><span style="color:#DA70D6">[</span><span style="color:#B5CEA8">0</span><span style="color:#DA70D6">]</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#DCDCAA">  cov_159mw6va2c</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">s</span><span style="color:#DA70D6">[</span><span style="color:#B5CEA8">0</span><span style="color:#DA70D6">]</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#C586C0">  if</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">input</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#DCDCAA">    cov_159mw6va2c</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">b</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">]</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">0</span><span style="color:#179FFF">]</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#DCDCAA">    cov_159mw6va2c</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">s</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">]</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#C586C0">    return</span><span style="color:#569CD6"> true</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span><span style="color:#D4D4D4"> </span><span style="color:#C586C0">else</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#DCDCAA">    cov_159mw6va2c</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">b</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">]</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">]</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#DCDCAA">  cov_159mw6va2c</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">s</span><span style="color:#DA70D6">[</span><span style="color:#B5CEA8">2</span><span style="color:#DA70D6">]</span><span style="color:#D4D4D4">++;</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#9CDCFE"> input</span></span>
+<span class="line"><span style="color:#D4D4D4">    ? </span><span style="color:#DA70D6">(</span><span style="color:#DCDCAA">cov_159mw6va2c</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">b</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">2</span><span style="color:#179FFF">]</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">0</span><span style="color:#179FFF">]</span><span style="color:#D4D4D4">++, </span><span style="color:#B5CEA8">1</span><span style="color:#DA70D6">)</span></span>
+<span class="line"><span style="color:#D4D4D4">    : </span><span style="color:#DA70D6">(</span><span style="color:#DCDCAA">cov_159mw6va2c</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">b</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">2</span><span style="color:#179FFF">]</span><span style="color:#179FFF">[</span><span style="color:#B5CEA8">1</span><span style="color:#179FFF">]</span><span style="color:#D4D4D4">++, </span><span style="color:#B5CEA8">0</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>而由于我们的解释器是自己实现的，实现测试覆盖率的统计更为简单，只需要在遍历抽象语法树时，加入钩子即可：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> shouldCover</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">[</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> covered</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">[</span><span style="color:#FFD700">]</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> ast</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">parse</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">source</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#DCDCAA">walk</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">ast</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  hooks:</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#DCDCAA">    beforeVisit</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">node</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">      shouldCover</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">push</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">node</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#179FFF">}</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#C586C0">for</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">(</span><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> test</span><span style="color:#569CD6"> of</span><span style="color:#9CDCFE"> testCases</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> func</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">intercept</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">ast</span><span style="color:#D4D4D4">, </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    hooks:</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#DCDCAA">      beforeEvaluate</span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">node</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">        covered</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">push</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">node</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#D4D4D4">      </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#179FFF">}</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  func</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">apply</span><span style="color:#DA70D6">(</span><span style="color:#569CD6">null</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">test</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">input</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> coverage</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">collect</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">shouldCover</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">covered</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<hr class="divider"/>
+<p>好了，现在我们已经掌握了基本的方法去实现一个 JavaScript 沙盒，并支持单步/断点调试，以及统计测试覆盖率，有兴趣的同学可以在线体验一下这个 <a href="https://codesandbox.io/p/sandbox/tiny-js-sandbox-app-f2dn8z?file=%2Fsrc%2Fcook.js">Demo</a>，并试着改进其中的解释器。</p></article></main><footer class="page-footer"><hr/><div class="bio"><img class="bio-avatar" src="/assets/a0736d0e7e8d470e.png"/><div class="bio-content">Personal blog by <a href="/">Shenwei Wang</a>.<br/>Writing code, raising kid, exploring the world.</div></div></footer></body></html>

@@ -1,0 +1,52 @@
+<html lang="zh-Hans-CN"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/assets/35fece000449e47f.png"/><link rel="preload" as="image" href="/assets/2128ac47c63c1242.png"/><link rel="preload" as="image" href="/assets/1834bcc4164cec69.png"/><link rel="preload" as="image" href="/assets/a0736d0e7e8d470e.png"/><script src="/assets/EWFGSKOU.js" async=""></script><title>我的第一个 VS Code 扩展</title><meta name="title" content="我的第一个 VS Code 扩展"/><meta name="og:site_name" content="WeAreOutMan"/><meta name="og:title" content="我的第一个 VS Code 扩展"/><meta name="og:type" content="article"/><meta name="og:url" content="https://www.wangshenwei.com/my-first-vscode-extension/"/><meta name="og:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:url" content="https://www.wangshenwei.com/my-first-vscode-extension/"/><meta name="twitter:title" content="我的第一个 VS Code 扩展"/><meta name="twitter:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><link rel="icon" href="/assets/a0736d0e7e8d470e.png"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/><link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Montserrat:wght@700;900&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="/assets/main.caad21e9.css"/></head><body><header class="page-header"><a href="/">WeAreOutMan</a><color-mode-switch></color-mode-switch></header><main><article><h1>我的第一个 VS Code 扩展</h1><p class="post-date">February 29, 2020</p><p>在工作中的一个项目里，我们为静态声明式的配置文件（JSON）添加了一个在运行时处理动态数据的能力。</p>
+<p>我们尝试在 JSON 的字符串中扩展了类似 JS 的<a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals">模板字符串</a>能力，配置形式大约如下：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  &quot;brick&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;my-brick&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  &quot;properties&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;sort&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;${QUERY.sort = hostname}&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;states&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;${QUERY.states = [1, 2]}&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;from&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;?from=${HASH | substr: 1}&quot;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  &quot;transform&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;users&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;@{owners = {} | values | compact}&quot;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>其中被 <code>${...}</code> 包裹嵌入的表达式将在运行时被解析，并根据上下文信息计算得到最终的结果。开发者可以在这个表达式中填入使用的数据字段，指定当原始数据为空时应使用的默认值，设置管道和可选参数对数据进行加工，并且允许给默认值、参数等设置数组或字典这样的复合数据结构。</p>
+<p>由于数组或字典这样的表达式内部包含了括号平衡，要解析这个嵌入式语法超出了传统的正则表达式的能力范畴，因此我们有必要为它设计一套严瑾的语法。</p>
+<p>为了能方便地编译这套语法，它应该是<a href="https://en.wikipedia.org/wiki/Context-free_grammar">上下文无关</a>的，因此我们使用 <a href="https://en.wikipedia.org/wiki/EBNF">EBNF</a> 设计我们的语法如下：</p>
+<pre><code class="language-ebnf">InjectableString
+         ::= ( Placeholder | RawString )*
+
+Placeholder
+         ::= &#x27;${&#x27; Field Default? Pipes? &#x27;}&#x27;
+
+Default  ::= &#x27;=&#x27; JsonValueOrLiteral
+
+Pipes    ::= ( &#x27;|&#x27; Pipe )+
+
+Pipe     ::= Identifier ( &#x27;:&#x27; JsonValueOrLiteral )*
+
+JsonValueOrLiteral
+         ::= JsonValue | Literal
+</code></pre>
+<p>通过一个在线工具 <a href="https://www.bottlecaps.de/rr/ui">Railroad Diagram Generator</a> 可以将语法的结构可视化出来：</p>
+<p><img src="/assets/35fece000449e47f.png" alt="Grammar Diagram"/></p>
+<p>语法设计好了，接下来就可以实现它的编译器了，参考教程 <em><a href="https://www.tutorialspoint.com/compiler_design/index.htm">Compiler Design Tutorial</a></em> 依次实现<a href="https://www.tutorialspoint.com/compiler_design/compiler_design_lexical_analysis.htm">词法分析</a>和<a href="https://www.tutorialspoint.com/compiler_design/compiler_design_syntax_analysis.htm">语法分析</a>。具体的方案这里不再赘述，无外乎通过正则匹配取得 <em>Token</em> 列表，然后使用<a href="https://en.wikipedia.org/wiki/Automata_theory">自动机</a>分析生成语法树，最后系统根据语法树运行代码。</p>
+<p>这套语法虽然看上去非常简单，但它已经能满足当下的需求，开发者理解来也并不费力。不过有一个缺点是这些嵌入的表达式无法被 IDE 识别并进行语法高亮，它们只是一串字符串。</p>
+<p>众所周知，代码语法高亮是程序开发的基本要求，在<em>马斯洛需求层次理论</em>中属于最基本的<em>生理需求</em>。好在以 VS Code 为首的现代代码编辑器的优秀的可扩展能力，我们完全可以为这套刚出炉的语法实现一个语法高亮扩展。</p>
+<blockquote>
+<p>关于如何开始编写 VS Code 扩展请参考<a href="https://code.visualstudio.com/api">官方文档</a>。始终优先考虑第一手资料，我这里的或者别人的二手资料随时可能过时。</p>
+</blockquote>
+<p>根据科学而详尽的官方文档指引，新扩展的编写按部就班：</p>
+<ol>
+<li><a href="https://code.visualstudio.com/api/get-started/your-first-extension">使用脚手架工具新建项目</a>；</li>
+<li>根据<a href="https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide">语法高亮指引</a>，这套新语法适用于 <a href="https://code.visualstudio.com/api/language-extensions/syntax-highlight-guide#injection-grammars">Injection Grammars</a>；</li>
+<li>将新语法改写成 VS Code 使用的 <a href="https://macromates.com/manual/en/language_grammars">TextMate Grammars</a>；</li>
+<li>本地调试，最后完成<a href="https://code.visualstudio.com/api/working-with-extensions/publishing-extension">发布</a>。</li>
+</ol>
+<p>其中没有太多的困难，主要的工作集中在编写 TextMate Grammars 上，但好在我们遵循了相对标准的设计，可以轻松地利用之前生成的语法设计图、词法和语法分析代码转换成 TextMate Grammars。</p>
+<p>在这个扩展的加持下，我们的嵌入式代码终于变得灵动起来。</p>
+<p><img src="/assets/2128ac47c63c1242.png" alt="Sample"/></p>
+<hr class="divider"/>
+<p><a href="https://marketplace.visualstudio.com/items?itemName=weareoutman.vscode-brick-next">Brick Next Support</a> 发布一天，喜获一条五星好评和十一次下载 👏。</p>
+<p><img src="/assets/1834bcc4164cec69.png" alt="Screenshot"/></p></article></main><footer class="page-footer"><hr/><div class="bio"><img class="bio-avatar" src="/assets/a0736d0e7e8d470e.png"/><div class="bio-content">Personal blog by <a href="/">Shenwei Wang</a>.<br/>Writing code, raising kid, exploring the world.</div></div></footer></body></html>

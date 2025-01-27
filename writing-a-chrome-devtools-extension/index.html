@@ -1,0 +1,203 @@
+<html lang="zh-Hans-CN"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/assets/a5a35d86af3688a2.jpg"/><link rel="preload" as="image" href="/assets/5e35eec29385eb34.jpg"/><link rel="preload" as="image" href="/assets/9b78dd20639b9f17.png"/><link rel="preload" as="image" href="/assets/a0736d0e7e8d470e.png"/><script src="/assets/EWFGSKOU.js" async=""></script><title>编写一个 Chrome 开发者工具的扩展程序</title><meta name="title" content="编写一个 Chrome 开发者工具的扩展程序"/><meta name="og:site_name" content="WeAreOutMan"/><meta name="og:title" content="编写一个 Chrome 开发者工具的扩展程序"/><meta name="og:type" content="article"/><meta name="og:url" content="https://www.wangshenwei.com/writing-a-chrome-devtools-extension/"/><meta name="og:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:url" content="https://www.wangshenwei.com/writing-a-chrome-devtools-extension/"/><meta name="twitter:title" content="编写一个 Chrome 开发者工具的扩展程序"/><meta name="twitter:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><link rel="icon" href="/assets/a0736d0e7e8d470e.png"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/><link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Montserrat:wght@700;900&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="/assets/main.caad21e9.css"/></head><body><header class="page-header"><a href="/">WeAreOutMan</a><color-mode-switch></color-mode-switch></header><main><article><h1>编写一个 Chrome 开发者工具的扩展程序</h1><p class="post-date">April 25, 2020</p><p>在工作中的一个项目里，我们的前端框架建立在 <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components">Web Components</a> 技术之上，每个界面都由数个到数十个 <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Using_custom_elements">Custom Elements</a> 组成。它们基于 Web 标准技术，因此开发者可以直接使用浏览器原生的开发者工具来辅助开发和调试。例如利用 Chrome 的开发者工具，我们可以直接审查指定的 Custom Elements，也可以在控制台中打印出它们的属性等等。</p>
+<p>这些自定义元素通常都有与业务相关的自定义属性、方法和事件，虽然我们可以在控制台中打印出这个元素，但是要从大量的继承自 <code>HTMLElement</code> 的属性中分辨出想要的业务属性并不容易。另一方面，框架为静态声明式的配置文件添加了运行时处理动态数据的能力，开发者有时希望能审查这些数据转换的过程。</p>
+<p>浏览器原生的开发者工具已经不能满足需求，因此我们决定扩展一下它的能力。</p>
+<p>在讲述如何编写这个扩展程序前，先看两张成品图片，以便理解我们想要拓展的能力。我们为开发者工具新建了一个 <em>“Bricks”</em> 面板，它可以列出当前审查的页面由自定义元素组成的渲染树，鼠标经过时可以实时显示对应元素的轮廓，点击选中一个元素则可以显示它的业务属性和事件配置等。</p>
+<p><a href="/assets/a5a35d86af3688a2.jpg"><img src="/assets/a5a35d86af3688a2.jpg" alt="Bricks Panel"/></a></p>
+<p>切换到 <em>“Evaluations”</em> 则可以实时显示框架中被称为 <em>“Evaluate”</em> 的数据处理的过程、结果及其上下文信息。</p>
+<p><a href="/assets/5e35eec29385eb34.jpg"><img src="/assets/5e35eec29385eb34.jpg" alt="Evaluations Panel"/></a></p>
+<hr class="divider"/>
+<blockquote>
+<p>本文不会从头讲述如何一步一步地编写扩展程序，对于这些我们应该去阅读<a href="https://developer.chrome.com/extensions">官方开发手册</a>。本文主要侧重讲述其中不易理解、或相对困难的部分，如扩展程序中各模块的通讯方式、限制、以及如何突破这些限制等。</p>
+</blockquote>
+<p>接下来进入正题，首先阅读官方的几篇文档《<a href="https://developer.chrome.com/extensions/getstarted">Getting Started Tutorial</a>》、《<a href="https://developer.chrome.com/extensions/devtools">Extending DevTools</a>》，其中下面这张图很好地解释了一个 Chrome 开发者工具扩展程序所涉及的几个主要模块及其之间的关系：</p>
+<p><a href="/assets/9b78dd20639b9f17.png"><img src="/assets/9b78dd20639b9f17.png" alt="DevTools Extension"/></a></p>
+<p>Content scripts:</p>
+<ul>
+<li>以当前审查的页面为上下文访问完整的 DOM 接口；</li>
+<li>在相对的孤立世界中执行，它的执行被设计为不与页面或其它 content scripts 冲突；</li>
+<li>可以与 Background page 通信；</li>
+</ul>
+<p>Background page:</p>
+<ul>
+<li>可以访问完整的扩展程序 API；</li>
+<li>可以分别与 Content scripts、 DevTools page 通信；</li>
+</ul>
+<p>DevTools page:</p>
+<ul>
+<li>可以访问 <code>chrome.devtools.*</code> API；</li>
+<li>为开发者工具创建新的面板；</li>
+</ul>
+<p>其中 <code>chrome.devtools.inspectedWindow.eval</code>:</p>
+<ul>
+<li>可以在 DevTools page 及其创建的面板页面中使用它；</li>
+<li>以当前审查的页面为上下文执行指定 JavaScript 代码；</li>
+<li>该上下文还额外包括了开发者工具控制台 API；</li>
+<li>可以设置一个选项以使用 content scripts 上下文来执行代码。</li>
+</ul>
+<p>我们的扩展程序的主要业务逻辑和界面都在 DevTools page，它不能直接访问 DOM，而我们需要展示的信息几乎都来自 DOM，因此只能借助其它模块来实现间接访问。</p>
+<p>首先看最接近 DOM 的 content scripts，它有个关键词--<em>“孤立世界”</em>，虽然官方文档对此有<a href="https://developer.chrome.com/extensions/content_scripts#isolated_world">说明</a>，但依然有些令人费解。从手工测试结果来看，content scripts 中访问标准的 DOM 接口可以按预期工作，除此之外的操作将撞上孤立世界的边界，即：除了标准 DOM 接口以外的操作只能影响该脚本自身。</p>
+<p>例如以下 content script 可以按预期工作：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/* @file: your-content-script.js */</span></span>
+<span class="line"><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">addEventListener</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;DOMContentLoaded&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  document</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">body</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">style</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">background</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;red&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>而以下脚本无法按预期工作：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/* @file: your-content-script.js */</span></span>
+<span class="line"><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">addEventListener</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;DOMContentLoaded&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#6A9955">  // 假设审查的页面给 `body` 添加了自定义属性 `yourAddon`，</span></span>
+<span class="line"><span style="color:#6A9955">  // 但由于它不是标准 DOM 接口，content scripts 无法访问它，</span></span>
+<span class="line"><span style="color:#6A9955">  // 因此这里只会打印 `undefined`。</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">document</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">body</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">yourAddon</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // 同样适用于全局变量。</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#4FC1FF">YOUR_METADATA</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">  // 为元素赋值 `yourAddon` 将只影响该脚本自身。</span></span>
+<span class="line"><span style="color:#9CDCFE">  document</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">body</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">yourAddon</span><span style="color:#D4D4D4"> = </span><span style="color:#CE9178">&quot;hello world&quot;</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">  // 将打印 `&quot;hello world&quot;`。但在审查的页面中，该属性不受影响。</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">document</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">body</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">yourAddon</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>我们想要展示的、由自定义元素组成的渲染树及其业务属性等信息，正是标准 DOM 接口以外的数据，content scripts 无法直接访问，需要另辟蹊径。</p>
+<p>再看 <code>inspectedWindow.eval</code>，它也能以当前审查的页面为上下文执行代码，它接收一段字符串作为代码执行，并且将执行结果传递给回调函数，例如：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/* @file: your-devtools-page.js */</span></span>
+<span class="line"><span style="color:#9CDCFE">chrome</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">devtools</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">inspectedWindow</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">eval</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;document.body.yourAddon&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">result</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#6A9955">  // 假设审查的页面给 `body` 添加了自定义属性 `yourAddon` 值为 `&quot;hello world&quot;`，</span></span>
+<span class="line"><span style="color:#6A9955">  // 将打印 `&quot;hello world&quot;`。</span></span>
+<span class="line"><span style="color:#9CDCFE">  console</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">log</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">result</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>这看起来可以让我们拿到想要的渲染树信息了。但是官方文档也说明了它对代码执行结果的要求：<em>合法的 JSON 对象</em>，即可以序列化为 JSON 的对象，它只能包含 JavaScript 原始类型的值、并且不包含循环引用。这意味着它的能力受到了限制，例如无法直接传递原生事件对象 <code>Event</code>、<code>CustomEvent</code> 或者内部包含循环引用的属性，不过我们先暂时放下这个问题。</p>
+<p>渲染树信息可以由框架封装接口提供给 <code>inspectedWindow.eval</code> 调用，但这意味着框架需要额外捆绑扩展程序专用的代码逻辑，并且这些逻辑与扩展程序紧密相关，这增加了代码耦合度。</p>
+<p>为了尽量减少对框架的侵入、降低耦合，还需要进一步探索。在参考了 <a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi">React Developer Tools</a> 的源码后，我发现了能让代码在真正的审查页面的上下文中执行的方法。在 content scripts 中动态插入 <code>&lt;script&gt;</code> 标签，插入 <code>&lt;script&gt;</code> 的过程是标准的 DOM 操作，仍然在 content scripts 的孤立世界中，而它指向的代码文件则跳脱了出来！</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/* @file: your-content-script.js */</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> script</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">document</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">createElement</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;script&quot;</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// `hook.js` 将在真正的审查页面的上下文中执行。</span></span>
+<span class="line"><span style="color:#9CDCFE">script</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">src</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">chrome</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">runtime</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getURL</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;hook.js&quot;</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">document</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">documentElement</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">appendChild</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">script</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">script</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">parentNode</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">removeChild</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">script</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>由此，获取渲染树信息的代码逻辑可以放在 <code>hook.js</code> 中，并在 DevTools page 中使用 Eval 接口调用它。</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/* @file: hook.js */</span></span>
+<span class="line"><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getRenderTree</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span><span style="color:#D4D4D4"> ... </span><span style="color:#FFD700">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">/* @file: your-devtools-page.js */</span></span>
+<span class="line"><span style="color:#9CDCFE">chrome</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">devtools</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">inspectedWindow</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">eval</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;window.getRenderTree()&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">result</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#6A9955">  // Display render tree.</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>渲染树可以显示了，那么如何获取单个自定义元素呢？Eval 接口接收的是一串字符串代码，无法为它传递引用，但我们可以想办法在 <code>hook.js</code> 中存储一个映射表来存放自增 ID 与自定义元素的关系，Eval 调用时只传递 ID。</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/* @file: hook.js */</span></span>
+<span class="line"><span style="color:#6A9955">// 简易自增 ID 工厂</span></span>
+<span class="line"><span style="color:#569CD6">let</span><span style="color:#9CDCFE"> uniqueIdCounter</span><span style="color:#D4D4D4"> = </span><span style="color:#B5CEA8">0</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> uniqueId</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">uniqueIdCounter</span><span style="color:#D4D4D4"> += </span><span style="color:#B5CEA8">1</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#6A9955">// 映射表</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> uidToElement</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">new</span><span style="color:#DCDCAA"> Map</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getRenderTree</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#6A9955">  // 记录映射表</span></span>
+<span class="line"><span style="color:#9CDCFE">  uidToElement</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">set</span><span style="color:#DA70D6">(</span><span style="color:#DCDCAA">uniqueId</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">element</span><span style="color:#DA70D6">)</span></span>
+<span class="line"><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// 获取元素属性信息</span></span>
+<span class="line"><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">getElement</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">uid</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#9CDCFE"> uidToElement</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">get</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">uid</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">/* @file: your-devtools-page.js */</span></span>
+<span class="line"><span style="color:#9CDCFE">chrome</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">devtools</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">inspectedWindow</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">eval</span><span style="color:#FFD700">(</span></span>
+<span class="line"><span style="color:#CE9178">  `window.getElement(</span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">uid</span><span style="color:#569CD6">}</span><span style="color:#CE9178">).props`</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">(</span><span style="color:#9CDCFE">result</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#6A9955">    // Display element props.</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>之前提到过 Eval 接口还可以访问<a href="https://developers.google.com/web/tools/chrome-devtools/console/utilities">开发者工具控制台 API</a>，例如我们可以调用 <code>inspect()</code> 来审查元素或函数：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">/* @file: your-devtools-page.js */</span></span>
+<span class="line"><span style="color:#6A9955">// `inspect(element)` 将打开 Element 面板并选中该元素。</span></span>
+<span class="line"><span style="color:#9CDCFE">chrome</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">devtools</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">inspectedWindow</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">eval</span><span style="color:#FFD700">(</span></span>
+<span class="line"><span style="color:#CE9178">  `inspect(window.getElement(</span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">uid</span><span style="color:#569CD6">}</span><span style="color:#CE9178">));`</span></span>
+<span class="line"><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// `inspect(function)` 将打开 Source 面板并指向该函数对应的源码。</span></span>
+<span class="line"><span style="color:#9CDCFE">chrome</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">devtools</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">inspectedWindow</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">eval</span><span style="color:#FFD700">(</span></span>
+<span class="line"><span style="color:#CE9178">  `inspect(window.getElement(</span><span style="color:#569CD6">${</span><span style="color:#9CDCFE">uid</span><span style="color:#569CD6">}</span><span style="color:#CE9178">).constructor);`</span></span>
+<span class="line"><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>迄今为止我们都是在 DevTools page 主动调用 Eval 接口获取信息，但有时候我们需要响应来自审查的页面的消息，例如当页面重新渲染后，希望 DevTools page 能够自动重新获取渲染树，又或者框架完成一次 Evaluate 数据处理后，希望在 DevTools page 实时显示。</p>
+<p>上文介绍过，DevTools page 无法直接和审查的页面通信，但我们可以通过 content script 和 background page 作为代理管道转发消息完成通信。</p>
+<pre><code>Hook
+    ↖↘
+  Content script
+        ↖↘
+      Background page
+            ↖↘
+          DevTools page
+</code></pre>
+<p>其中需要注意的是，对于每个扩展程序，只有一个 background page 实例，而 content script 和 DevTools page 则是每个 tab 页对应一个实例，因此在 background page 中实现双向管道时需要识别连接的 <code>tab.id</code>。</p>
+<p>在这个通信过程中，我们再次遇到了和 Eval 接口一样的问题：只能传递 JSON 序列化的数据。序列化，或者说更广义的编码/解码，是很多通讯方式的基础，遥远如书信，信息被编码为文字，近如网络，信息被编码为数字信号。编码再解码后的得到的信息其实不是真正的原始信息，而是一份有损的拷贝，正如电话里听到的是手机扬声器还原的对方的声音，网络视频里看到的是屏幕上绘制的对方镜头的影像拷贝。</p>
+<p>我们的扩展程序需要展示一些数据结构信息，其中难免包含复杂对象类型或循环引用的数据，那如何解决 JSON 序列化的问题呢？再次参考 React Developer Tools 的源码，它使用了一对命名为 <code>dehydrate</code> 和 <code>hydrate</code> （脱水和补水）的函数，发送消息前，<code>dehydrate</code> 将原始信息进行<em>脱水</em>，将复杂对象类型转换为特定的可以被 JSON 序列化的结构信息，接收消息时，对数据进行<em>补水</em>，还原得到原始的对象类型。</p>
+<p>这对函数的命名有点意思，让我想到了科幻小说《三体》里的情节，三体人为了在乱纪元中生存，会自我<em>脱水</em>进入休眠状态，而到了恒纪元则完成<em>补水</em>重新苏醒。这或许正如复杂数据想要在通信中保持相对完整也需要进行脱水和补水一样。</p>
+<p>回到主题，一个简单的脱水效果大约如下：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// 脱水前</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> event</span><span style="color:#D4D4D4"> = </span><span style="color:#569CD6">new</span><span style="color:#DCDCAA"> CustomEvent</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;something-happened&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  detail:</span><span style="color:#CE9178"> &quot;oops&quot;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> input</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  firedEvent:</span><span style="color:#9CDCFE"> event</span></span>
+<span class="line"><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// 执行脱水</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> output</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">dehydrate</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">input</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// 脱水后</span></span>
+<span class="line"><span style="color:#DCDCAA">expect</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">output</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toEqual</span><span style="color:#FFD700">(</span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#6A9955">  // 普通对象如 `{ firedEvent: ... }` 保留原结构</span></span>
+<span class="line"><span style="color:#9CDCFE">  firedEvent:</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#6A9955">    // 复杂对象被转换为特定结构，并附带一些跟该类型相关的信息</span></span>
+<span class="line"><span style="color:#6A9955">    // `__dehydrated_use_only__` 是一个用于识别脱水数据的特殊 key</span></span>
+<span class="line"><span style="color:#9CDCFE">    __dehydrated_use_only__:</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">      type:</span><span style="color:#CE9178"> &quot;object&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      constructorName:</span><span style="color:#CE9178"> &quot;CustomEvent&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      children:</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">        type:</span><span style="color:#CE9178"> &quot;something-happened&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">        detail:</span><span style="color:#CE9178"> &quot;oops&quot;</span></span>
+<span class="line"><span style="color:#D4D4D4">      </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#179FFF">}</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>脱水后的数据不再包含循环引用，并且在补水后可以还原得到原始对象类型的相关信息，虽然是有损的，但已经能满足界面展示数据类型的需求。</p>
+<p>但是，React Developer Tools 的实现中没有包含对循环引用的处理，它通过限制递归层级绕开了这个问题，只在用户需要访问更深层级的数据时再去实时获取。</p>
+<p>我尝试采取了另一种方案，在返回的数据中额外包含一个映射表，存储所有被多次引用的对象，同时对 <code>dehydrate</code> 的数据扩展一种映射类型，表示数据存放在映射表中。优化后的脱水效果大约如下：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// 脱水前</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> person</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  name:</span><span style="color:#CE9178"> &quot;Good Man&quot;</span></span>
+<span class="line"><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">person</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">loves</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">person</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// 执行脱水</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> dehydratedPerson</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">dehydrate</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">person</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">// 脱水后</span></span>
+<span class="line"><span style="color:#6A9955">// `value` 固定为 `dehydrate()` 结果的主体数据</span></span>
+<span class="line"><span style="color:#DCDCAA">expect</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">dehydratedPerson</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">value</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toEqual</span><span style="color:#FFD700">(</span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  name:</span><span style="color:#CE9178"> &quot;Good Man&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  loves:</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    __dehydrated_use_only__:</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">      type:</span><span style="color:#CE9178"> &quot;ref&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">      ref:</span><span style="color:#B5CEA8"> 0</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#179FFF">}</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">// `repo` 固定为 `dehydrate()` 结果的引用映射表</span></span>
+<span class="line"><span style="color:#DCDCAA">expect</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">dehydratedPerson</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">repo</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toEqual</span><span style="color:#FFD700">(</span><span style="color:#DA70D6">[</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#179FFF">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    name:</span><span style="color:#CE9178"> &quot;Good Man&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    loves:</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">      __dehydrated_use_only__:</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">        type:</span><span style="color:#CE9178"> &quot;ref&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">        ref:</span><span style="color:#B5CEA8"> 0</span></span>
+<span class="line"><span style="color:#D4D4D4">      </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#D4D4D4">    </span><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#179FFF">}</span></span>
+<span class="line"><span style="color:#DA70D6">]</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>补水后则可以还原循环引用关系：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// 补水</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#4FC1FF"> person</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">hydrate</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">dehydratedPerson</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">expect</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">person</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">name</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toBe</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;Good Man&quot;</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">expect</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">person</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">loves</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toBe</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">person</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>至此，当下的主要困难都已经被解决。Keep exploring.</p>
+<blockquote>
+<p>注：本文代码均只作示意用途，非实际代码。该扩展程序已发布：<a href="https://chrome.google.com/webstore/detail/brick-next-developer-tool/imfbjbfcldgkdbfgeoppalofbjfihpdp">Brick Next Developer Tools</a>，源码托管在 GitHub：<a href="https://github.com/easyops-cn/brick-next-devtools">brick-next-devtools</a>。</p>
+</blockquote></article></main><footer class="page-footer"><hr/><div class="bio"><img class="bio-avatar" src="/assets/a0736d0e7e8d470e.png"/><div class="bio-content">Personal blog by <a href="/">Shenwei Wang</a>.<br/>Writing code, raising kid, exploring the world.</div></div></footer></body></html>

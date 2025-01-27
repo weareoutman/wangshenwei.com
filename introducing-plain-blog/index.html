@@ -1,0 +1,65 @@
+<html lang="en-US"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/assets/a0736d0e7e8d470e.png"/><script src="/assets/EWFGSKOU.js" async=""></script><title>Introducing Plain Blog</title><meta name="title" content="Introducing Plain Blog"/><meta name="og:site_name" content="WeAreOutMan"/><meta name="og:title" content="Introducing Plain Blog"/><meta name="og:type" content="article"/><meta name="og:url" content="https://www.wangshenwei.com/introducing-plain-blog/"/><meta name="og:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:url" content="https://www.wangshenwei.com/introducing-plain-blog/"/><meta name="twitter:title" content="Introducing Plain Blog"/><meta name="twitter:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><link rel="icon" href="/assets/a0736d0e7e8d470e.png"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/><link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Montserrat:wght@700;900&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="/assets/main.caad21e9.css"/></head><body><header class="page-header"><a href="/">WeAreOutMan</a><color-mode-switch></color-mode-switch></header><main><article><h1>Introducing Plain Blog</h1><p class="post-date">January 19, 2025</p><p><a href="https://github.com/weareoutman/plain-blog">The Plain Blog builder</a> which emits zero client-side JavaScript. With minimal configuration, your blog will be fast and elegant.</p>
+<p>Although it emits no JavaScript to the the client-side, you can composite your page layout using React components, writing content in markdown or MDX. So blogs built with similar tech like <a href="https://www.gatsbyjs.com/">Gatsby</a> can migrate to Plain Blog with little effort.</p>
+<p>It&#x27;s fast, both at run time and build time. For <a href="https://www.wangshenwei.com/">my own personal blog</a>, which includes a dozen of articles and about 50 images, it builds in less than 1 second on my Mac. While it was using Gatsby, it would take about 30 seconds for a cold build, and 10 seconds for a warm build.</p>
+<p>Under the hood, it uses the Node.js native <a href="https://nodejs.org/docs/latest-v22.x/api/module.html#customization-hooks">module hooks</a>, as known as <em>node loaders</em>, to build all the pages. With module hooks, Node.js can import files other than js, such as jsx/md/css/png, actually any specifiers including http resources. So there are no pack tools involved (by default), just several transformer tools like <a href="https://mdxjs.com/">MDX</a> which supports markdown mixed with React, and <a href="https://swc.rs/">SWC</a> which transforms jsx code, and <a href="https://postcss.org/">PostCSS</a> which let you use tomorrow&#x27;s CSS today. If you opt-in specifies client-side scripts, it will use <a href="https://esbuild.github.io/">esbuild</a> to bundle them.</p>
+<p>And because it uses native imports, we can use <code>node --watch</code> for development, so no watch tools nor extra configs are needed.</p>
+<p>The whole system is pretty simple, it just works, and you can concentrate on creating your content.</p>
+<p>Check the source code out on GitHub: <a href="https://github.com/weareoutman/plain-blog">https://github.com/weareoutman/plain-blog</a>.</p>
+<p>For beginners, try this template repo on Github: <a href="https://github.com/weareoutman/plain-blog-template">https://github.com/weareoutman/plain-blog-template</a>.</p>
+<h2>When should I use it</h2>
+<p>You want to build a website which serves static content only, includes a personal blog, a documentation site, etc.</p>
+<p>In case you do need some client-side JavaScript anyway, you can opt-in to inject specified JS files by configure <code>scripts</code> in <code>plain.config.js</code>, we recommend to use it only when necessary, and make them as small as possible. And be aware of that <a href="https://react.dev/reference/react-dom/client/hydrateRoot">React hydration</a> is not supported, and likely will not be.</p>
+<h2>When should I NOT use it</h2>
+<p>You want to build a rich client-side website, which needs lots of interactions that can only be implemented with JavaScript.</p>
+<h2>Usage</h2>
+<p>You can try this template repo on Github: <a href="https://github.com/weareoutman/plain-blog-template">https://github.com/weareoutman/plain-blog-template</a>, or build it from the ground up.</p>
+<p>By default, the Plain Blog recognize the following file structure by default:</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span>your-blog</span></span>
+<span class="line"><span>├── content</span></span>
+<span class="line"><span>│   ├── hello-world.md</span></span>
+<span class="line"><span>│   ├── my-article.mdx</span></span>
+<span class="line"><span>│   └── my-page.jsx</span></span>
+<span class="line"><span>├── assets</span></span>
+<span class="line"><span>│   └── favicon.png</span></span>
+<span class="line"><span>├── dist</span></span>
+<span class="line"><span>└── package.json</span></span></code></pre>
+<p>For md/mdx/jsx files in content, they will be compiled to html files. For example <code>content/hello-world.md</code> will compiled to <code>dist/hello-world/index.html</code>, so you can visit <code>/hello-world/</code> from your website. For other files in content not starting with a dot, will be copied as it is.</p>
+<p>If you choose to build it from scratch, first create <code>package.json</code>:</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  &quot;type&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;module&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  &quot;scripts&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;build&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;plain-blog&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;watch&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;node --watch ./node_modules/.bin/plain-blog&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;serve&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;serve dist&quot;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  &quot;devDependencies&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;plain-blog&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;&gt;=0.4.0&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    &quot;serve&quot;</span><span style="color:#D4D4D4">: </span><span style="color:#CE9178">&quot;^14.2.4&quot;</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>Then run <code>npm install &amp;&amp; npm run build</code>. And your site has been built, run <code>npm run serve</code>, or serve the <code>dist</code> folder with any static server.</p>
+<p>The index page may have only a header and footer by now, try adding some markdown files in <code>content</code>, and run <code>npm run build</code> again.</p>
+<p>In most case, you need some custom css, as well as other configs to improve your blog. Add a config file named <code>plain.config.js</code> in your project root:</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// @ts-check</span></span>
+<span class="line"><span style="color:#6A9955">/** </span><span style="color:#569CD6">@type</span><span style="color:#4EC9B0"> </span><span style="color:#FFD700">{</span><span style="color:#4EC9B0">import</span><span style="color:#DA70D6">(</span><span style="color:#4EC9B0">&quot;plain-blog&quot;</span><span style="color:#DA70D6">)</span><span style="color:#4EC9B0">.SiteConfig</span><span style="color:#FFD700">}</span><span style="color:#6A9955"> */</span></span>
+<span class="line"><span style="color:#C586C0">export</span><span style="color:#C586C0"> default</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#6A9955">  // Fill in with site metadata to improve SEO</span></span>
+<span class="line"><span style="color:#9CDCFE">  site:</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">    title:</span><span style="color:#CE9178"> &quot;My Plain Blog&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    description:</span><span style="color:#CE9178"> &quot;Personal blog by xxx&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">    url:</span><span style="color:#CE9178"> &quot;https://example.com&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">}</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#9CDCFE">  styles:</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">[</span></span>
+<span class="line"><span style="color:#6A9955">    // You can use http resources for convenient, but it slows down the build.</span></span>
+<span class="line"><span style="color:#6A9955">    // &quot;https://unpkg.com/sanitize.css&quot;,</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">    // Recommend to install css packages then add them prefixed with `~`:</span></span>
+<span class="line"><span style="color:#6A9955">    // &quot;~sanitize.css&quot;,</span></span>
+<span class="line"><span style="color:#6A9955">    // &quot;~sanitize.css/typography.css&quot;,</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A9955">    // Also some local css files</span></span>
+<span class="line"><span style="color:#CE9178">    &quot;src/styles.css&quot;</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#D4D4D4">  </span><span style="color:#DA70D6">]</span><span style="color:#D4D4D4">,</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>With a little more work, such as <a href="https://github.com/weareoutman/wangshenwei.com/blob/master/plain.config.js">customizing components</a>, it can look nicer, just like <a href="https://www.wangshenwei.com/">my personal blog</a>.</p>
+<p>Read more: <a href="https://plain-blog.js.org/">https://plain-blog.js.org/</a></p></article></main><footer class="page-footer"><hr/><div class="bio"><img class="bio-avatar" src="/assets/a0736d0e7e8d470e.png"/><div class="bio-content">Personal blog by <a href="/">Shenwei Wang</a>.<br/>Writing code, raising kid, exploring the world.</div></div></footer></body></html>

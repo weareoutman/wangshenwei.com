@@ -1,0 +1,121 @@
+<html lang="zh-Hans-CN"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><link rel="preload" as="image" href="/assets/a0736d0e7e8d470e.png"/><script src="/assets/EWFGSKOU.js" async=""></script><title>编写良好的单元测试</title><meta name="title" content="编写良好的单元测试"/><meta name="og:site_name" content="WeAreOutMan"/><meta name="og:title" content="编写良好的单元测试"/><meta name="og:type" content="article"/><meta name="og:url" content="https://www.wangshenwei.com/writing-good-unit-tests/"/><meta name="og:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><meta name="twitter:card" content="summary"/><meta name="twitter:url" content="https://www.wangshenwei.com/writing-good-unit-tests/"/><meta name="twitter:title" content="编写良好的单元测试"/><meta name="twitter:image" content="https://www.wangshenwei.com/assets/a0736d0e7e8d470e.png"/><link rel="icon" href="/assets/a0736d0e7e8d470e.png"/><link rel="preconnect" href="https://fonts.googleapis.com"/><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/><link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400;1,700&amp;family=Montserrat:wght@700;900&amp;display=swap" rel="stylesheet"/><link rel="stylesheet" href="/assets/main.caad21e9.css"/></head><body><header class="page-header"><a href="/">WeAreOutMan</a><color-mode-switch></color-mode-switch></header><main><article><h1>编写良好的单元测试</h1><p class="post-date">June 15, 2019</p><blockquote>
+<p>“万物之始，大道至简”</p>
+</blockquote>
+<p>本文尝试从简单的单元测试思想着手，探讨如何编写良好的单元测试。以下将主要基于 <a href="https://www.typescriptlang.org/">TypeScript</a>, <a href="https://jestjs.io/">Jest</a>, <a href="https://reactjs.org/">React</a>, <a href="https://airbnb.io/enzyme/">Enzyme</a> 给出示例。关于单元测试的<a href="https://zh.wikipedia.org/wiki/%E5%8D%95%E5%85%83%E6%B5%8B%E8%AF%95">基本概念和重要性</a>不在本文讨论范围。</p>
+<h2>基本方法</h2>
+<p>编写单元测试的基本方法其实很简单：</p>
+<ol>
+<li>给定输入</li>
+<li>运行</li>
+<li>断言输出</li>
+</ol>
+<p>而一个好的单元测试的要求也很简单：</p>
+<ul>
+<li>覆盖足够的输入场景</li>
+<li>进行充分的输出断言</li>
+</ul>
+<p>一个最简单的例子：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `add.ts`</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> add</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">a</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">number</span><span style="color:#D4D4D4">, </span><span style="color:#9CDCFE">b</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">number</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">number</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#C586C0">  return</span><span style="color:#9CDCFE"> a</span><span style="color:#D4D4D4"> + </span><span style="color:#9CDCFE">b</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `add.spec.ts`</span></span>
+<span class="line"><span style="color:#DCDCAA">test</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;add(1, 2) should return 3&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#DCDCAA">  expect</span><span style="color:#179FFF">(</span><span style="color:#DCDCAA">add</span><span style="color:#FFD700">(</span><span style="color:#B5CEA8">1</span><span style="color:#D4D4D4">, </span><span style="color:#B5CEA8">2</span><span style="color:#FFD700">)</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toBe</span><span style="color:#179FFF">(</span><span style="color:#B5CEA8">3</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>我们编写单元测试的步骤如下：</p>
+<ol>
+<li>给定输入：<code>1</code>, <code>2</code></li>
+<li>运行： <code>add(...)</code></li>
+<li>断言输出：<code>expect(...).toBe(3)</code></li>
+</ol>
+<p>是不是很简单？当然，真实业务场景下我们要测试的单元远比上述例子复杂得多。</p>
+<ul>
+<li>输入更加复杂，除了普通的函数输入参数，还可能有外部的事件，因此难以覆盖所有场景</li>
+<li>输出更加复杂，除了普通的函数输出结果，还可能有对外部的副作用，因此难以断言运行结果</li>
+</ul>
+<blockquote>
+<p>这里提到的<em>输入</em>、<em>输出</em>不再是狭义上的函数输入、输出。我们将所有可能影响测试对象行为的外部因素都称之为输入，将所有测试对象运行后对外部造成的影响都称之为输出。这样理解之后，我们就可以化繁为简，将测试过程回归到前面提到的最基本的方法上。</p>
+</blockquote>
+<p>所以编写良好的单元测试首先要做的就是厘清测试对象的输入、输出，掌握覆盖不同形式的输入、断言不同形式的输出的方法。我们将分开讨论它们。</p>
+<h2>输入</h2>
+<p>足够简单的输入让我们可以花更少的时间、覆盖更多的场景。输入的来源大致有以下几种：</p>
+<ul>
+<li>普通变量参数</li>
+<li>外部依赖发送的事件</li>
+<li>GUI 操作事件</li>
+</ul>
+<p>编写测试覆盖它们的复杂度依次增大。除了第一个，其它都可以看作<em>外部事件</em>，也可以理解为<em>来自外界的副作用</em>。对于普通变量参数，我们只需构造这些参数即可完成<em>给定输入</em>的任务。而对于外部事件，我们要做的就是想办法触发这些事件。</p>
+<p>我们依然看一个简单的例子：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `MyComponent.ts`</span></span>
+<span class="line"><span style="color:#9CDCFE">window</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">addEventListener</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;resize&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span><span style="color:#D4D4D4"> ... </span><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>如何覆盖？主动发送这个事件：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `MyComponent.spec.ts`</span></span>
+<span class="line"><span style="color:#DCDCAA">test</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;MyComponent&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  window</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">dispatchEvent</span><span style="color:#179FFF">(</span><span style="color:#569CD6">new</span><span style="color:#DCDCAA"> Event</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;resize&quot;</span><span style="color:#FFD700">)</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">  // ...</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>再看一个例子：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `MyComponent.tsx`</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#DCDCAA"> handleChange</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">value</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">string</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">void</span><span style="color:#569CD6"> =</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span><span style="color:#D4D4D4"> ... </span><span style="color:#FFD700">}</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#C586C0">return</span><span style="color:#D4D4D4"> </span><span style="color:#D4D4D4">&lt;</span><span style="color:#4EC9B0">Editor</span><span style="color:#4EC9B0"> onChange</span><span style="color:#D4D4D4">=</span><span style="color:#FFD700">{</span><span style="color:#9CDCFE">handleChange</span><span style="color:#FFD700">}</span><span style="color:#D4D4D4"> /</span><span style="color:#D4D4D4">&gt;</span></span></code></pre>
+<p>如何覆盖依赖组件的特定事件？主动触发依赖组件的事件：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `MyComponent.spec.tsx`</span></span>
+<span class="line"><span style="color:#DCDCAA">test</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;MyComponent&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> wrapper</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">shallow</span><span style="color:#179FFF">(</span><span style="color:#D4D4D4">&lt;</span><span style="color:#4EC9B0">MyComponent</span><span style="color:#D4D4D4"> /</span><span style="color:#D4D4D4">&gt;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#9CDCFE">  wrapper</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">find</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">Editor</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">invoke</span><span style="color:#179FFF">(</span><span style="color:#CE9178">&quot;onChange&quot;</span><span style="color:#179FFF">)</span><span style="color:#179FFF">(</span><span style="color:#CE9178">&quot;faked value&quot;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">  // ...</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<h2>输出</h2>
+<p>足够简单的输出让我们可以更容易地断言运行结果。输出的形态大致有以下几种：</p>
+<ul>
+<li>普通变量输出</li>
+<li>GUI 的变化</li>
+<li>外部依赖的调用</li>
+</ul>
+<p>在测试中对它们进行断言的复杂度依次增大。除了第一个，其它都可以看作<em>对外界的副作用</em>。对于普通变量输出，我们只需简单地断言它的值即可。而对于对外界的副作用，我们要做的就是想办法断言这些副作用的影响。</p>
+<p>我们继续看一个简单的例子：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `handleClick.ts`</span></span>
+<span class="line"><span style="color:#569CD6">function</span><span style="color:#DCDCAA"> handleClick</span><span style="color:#FFD700">(</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">void</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#9CDCFE">  history</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">push</span><span style="color:#DA70D6">(</span><span style="color:#CE9178">&quot;/next/url&quot;</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span></code></pre>
+<p>如何断言？我们可以断言副作用的影响结果：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `handleClick.spec.ts`</span></span>
+<span class="line"><span style="color:#DCDCAA">test</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;handleClick&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#DCDCAA">  handleClick</span><span style="color:#179FFF">(</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">  expect</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">history</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">location</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">pathname</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toBe</span><span style="color:#179FFF">(</span><span style="color:#CE9178">&quot;/next/url&quot;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>有时副作用所影响的结果难以断言，或者该依赖被 <em>Mocked</em>，那么我们可以监视该副作用的触发点是否被正确调用了：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `handleClick.spec.ts`</span></span>
+<span class="line"><span style="color:#DCDCAA">test</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;handleClick&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> spyOnHistoryPush</span><span style="color:#D4D4D4"> = </span><span style="color:#9CDCFE">jest</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">spyOn</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">history</span><span style="color:#D4D4D4">, </span><span style="color:#CE9178">&quot;push&quot;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DCDCAA">  expect</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">spyOnHistoryPush</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toBeCalledWith</span><span style="color:#179FFF">(</span><span style="color:#CE9178">&quot;/next/url&quot;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>再看一个 React 组件的例子：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `MyComponent.tsx`</span></span>
+<span class="line"><span style="color:#569CD6">const</span><span style="color:#DCDCAA"> handleValidation</span><span style="color:#D4D4D4"> = </span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">valid</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">boolean</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">: </span><span style="color:#4EC9B0">void</span><span style="color:#569CD6"> =</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">{</span></span>
+<span class="line"><span style="color:#569CD6">  this</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">setState</span><span style="color:#DA70D6">(</span><span style="color:#179FFF">{</span><span style="color:#D4D4D4"> </span><span style="color:#9CDCFE">valid</span><span style="color:#D4D4D4"> </span><span style="color:#179FFF">}</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#FFD700">}</span></span>
+<span class="line"><span style="color:#C586C0">return</span><span style="color:#D4D4D4"> </span><span style="color:#D4D4D4">&lt;</span><span style="color:#4EC9B0">Form</span><span style="color:#D4D4D4">.</span><span style="color:#4EC9B0">Item</span><span style="color:#4EC9B0"> className</span><span style="color:#D4D4D4">=</span><span style="color:#FFD700">{</span><span style="color:#D4D4D4"> </span><span style="color:#4EC9B0">this</span><span style="color:#D4D4D4">.</span><span style="color:#4EC9B0">state</span><span style="color:#D4D4D4">.</span><span style="color:#4EC9B0">valid</span><span style="color:#D4D4D4"> ? </span><span style="color:#CE9178">&quot;valid&quot;</span><span style="color:#D4D4D4"> : </span><span style="color:#CE9178">&quot;invalid&quot;</span><span style="color:#D4D4D4"> </span><span style="color:#FFD700">}</span><span style="color:#D4D4D4">&gt;</span><span style="color:#D4D4D4">&lt;</span><span style="color:#4EC9B0">Input</span><span style="color:#D4D4D4"> /</span><span style="color:#D4D4D4">&gt;</span><span style="color:#D4D4D4">&lt;</span><span style="color:#D4D4D4">/</span><span style="color:#4EC9B0">Form</span><span style="color:#D4D4D4">.</span><span style="color:#4EC9B0">Item</span><span style="color:#D4D4D4">&gt;</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>如何断言？判断依赖组件的变化：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `MyComponent.spec.tsx`</span></span>
+<span class="line"><span style="color:#DCDCAA">test</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;MyComponent&quot;</span><span style="color:#D4D4D4">, </span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4"> </span><span style="color:#569CD6">=</span><span style="color:#569CD6">&gt;</span><span style="color:#D4D4D4"> </span><span style="color:#DA70D6">{</span></span>
+<span class="line"><span style="color:#569CD6">  const</span><span style="color:#4FC1FF"> wrapper</span><span style="color:#D4D4D4"> = </span><span style="color:#DCDCAA">shallow</span><span style="color:#179FFF">(</span><span style="color:#D4D4D4">&lt;</span><span style="color:#4EC9B0">MyComponent</span><span style="color:#D4D4D4"> /</span><span style="color:#D4D4D4">&gt;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#6A9955">  // ... after something trigger `handleValidation()`</span></span>
+<span class="line"><span style="color:#DCDCAA">  expect</span><span style="color:#179FFF">(</span><span style="color:#9CDCFE">wrapper</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">find</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">Form</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">Item</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">prop</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;className&quot;</span><span style="color:#FFD700">)</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toBe</span><span style="color:#179FFF">(</span><span style="color:#CE9178">&quot;invalid&quot;</span><span style="color:#179FFF">)</span><span style="color:#D4D4D4">;</span></span>
+<span class="line"><span style="color:#DA70D6">}</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<p>始终记得要断言测试对象运行后对外界的副作用影响。</p>
+<p>另外断言的目标应该是<em>对外的影响</em>，而不是<em>内部状态</em>，因为内部状态并不是测试对象的<em>输出</em>。一个错误的例子：</p>
+<pre class="shiki dark-plus" style="background-color:#1E1E1E;color:#D4D4D4" tabindex="0"><code><span class="line"><span style="color:#6A9955">// `MyComponent.bad.spec.tsx`</span></span>
+<span class="line"><span style="color:#DCDCAA">expect</span><span style="color:#FFD700">(</span><span style="color:#9CDCFE">wrapper</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">instance</span><span style="color:#DA70D6">(</span><span style="color:#DA70D6">)</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">state</span><span style="color:#D4D4D4">.</span><span style="color:#9CDCFE">valid</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">.</span><span style="color:#DCDCAA">toBe</span><span style="color:#FFD700">(</span><span style="color:#CE9178">&quot;invalid&quot;</span><span style="color:#FFD700">)</span><span style="color:#D4D4D4">;</span></span></code></pre>
+<h2>重构与拆分</h2>
+<p>更简单的输入、输出让我们可以更容易地编写好的单元测试，但往往实际情况是业务需求不断增长，组件内部逻辑不断复杂化，输入输出的形式形态更加多样化，为组件编写单元测试的难度也随之陡增。</p>
+<p><strong>适时地重构与拆分</strong>是解决这个问题的关键。在如今的前端组件化的模式下尤为重要，合理拆分后的组件可以让每个测试单元的输入输出都变得更少、更聚焦。诸如 React, <a href="https://redux.js.org/">Redux</a> 等主流框架和工具推崇的<a href="https://flaviocopes.com/react-unidirectional-data-flow/">单向数据流</a>盛行的其中一个原因就是它们巧妙地让各个单元的输入来源、输出影响单一化，从而降低编写单元测试的难度，同时提升组件集成时的信心。</p>
+<h2>总结</h2>
+<p>编写良好的单元测试总结下来就是三条：</p>
+<ul>
+<li>识别测试对象的输入、输出</li>
+<li>掌握不同形态下的输入覆盖、输出断言的方法</li>
+<li>适时地重构与拆分</li>
+</ul>
+<p>希望以上内容对大家有所帮助。</p></article></main><footer class="page-footer"><hr/><div class="bio"><img class="bio-avatar" src="/assets/a0736d0e7e8d470e.png"/><div class="bio-content">Personal blog by <a href="/">Shenwei Wang</a>.<br/>Writing code, raising kid, exploring the world.</div></div></footer></body></html>
